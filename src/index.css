@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+/* Reset de márgenes y fondo full-bleed */
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background-color: #132133;
+  color: #ffffff;
+}
+
+/* Nieve navideña */
+@keyframes x-snow-fall {
+  0% {
+    transform: translateY(-10%);
+  }
+  100% {
+    transform: translateY(110%);
+  }
+}
+@keyframes x-snow-drift {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(12px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.x-snowflake {
+  position: absolute;
+  top: -10px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.7) 60%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border-radius: 9999px;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
+  animation: x-snow-fall linear infinite, x-snow-drift ease-in-out infinite;
+}
+
+/* Patrón sutil tipo copos */
+.xmas-pattern {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.06) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* Gradiente de acento reutilizable */
+.xmas-accent {
+  background-image: linear-gradient(135deg, #992b2b, #401212);
+}
+
+/* Fuente */
+body {
+  font-family: "Source Sans Pro", sans-serif;
+  letter-spacing: 0.05em;
+}
