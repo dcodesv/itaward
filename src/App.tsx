@@ -8,6 +8,7 @@ import CategoriesPage from "./pages/CategoriesPage";
 import CategoryDetailPage from "./pages/CategoryDetailPage";
 import ParticipantsPage from "./pages/ParticipantsPage";
 import MyVotesPage from "./pages/MyVotesPage";
+import NotFoundPage from "./pages/NotFoundPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import CategoriesManagement from "./pages/admin/CategoriesManagement";
@@ -28,6 +29,8 @@ function App() {
           <Route path="nominaciones" element={<NominationsManagement />} />
           <Route path="usuarios" element={<UsersManagement />} />
           <Route path="estadisticas" element={<Statistics />} />
+          {/* Ruta 404 para admin */}
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
         {/* Public Routes - Con TopNav y Snowfall */}
@@ -59,6 +62,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Ruta 404 - debe ir al final para capturar todas las rutas no definidas */}
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
