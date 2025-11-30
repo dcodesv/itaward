@@ -26,7 +26,40 @@ VITE_SUPABASE_ANON_KEY=tu-anon-key-de-supabase
    - **Project URL** → `VITE_SUPABASE_URL`
    - **anon/public key** → `VITE_SUPABASE_ANON_KEY`
 
-## Paso 3: Estructura de la base de datos
+## Paso 3: Configurar Storage para imágenes de avatares
+
+1. Ve a tu proyecto en Supabase Dashboard
+2. Ve a **Storage** en el menú lateral
+3. Haz clic en **New bucket**
+4. Crea un bucket con el nombre: `avatars`
+5. Configura el bucket como **Public** (para que las imágenes sean accesibles públicamente)
+6. En **Policies**, asegúrate de tener políticas que permitan:
+   - **INSERT**: Para que los usuarios puedan subir imágenes
+   - **SELECT**: Para que todos puedan ver las imágenes (público)
+   - **UPDATE**: Para que los usuarios puedan actualizar imágenes
+   - **DELETE**: Para que los usuarios puedan eliminar imágenes
+
+### Políticas recomendadas para el bucket `avatars`:
+
+```sql
+-- Permitir lectura pública
+CREATE POLICY "Public Access" ON storage.objects
+FOR SELECT USING (bucket_id = 'avatars');
+
+-- Permitir inserción (ajusta según tus necesidades de autenticación)
+CREATE POLICY "Authenticated users can upload" ON storage.objects
+FOR INSERT WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+
+-- Permitir actualización
+CREATE POLICY "Authenticated users can update" ON storage.objects
+FOR UPDATE USING (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+
+-- Permitir eliminación
+CREATE POLICY "Authenticated users can delete" ON storage.objects
+FOR DELETE USING (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+```
+
+## Paso 4: Estructura de la base de datos
 
 Las tablas que necesitarás crear en Supabase (se crearán en siguientes pasos):
 

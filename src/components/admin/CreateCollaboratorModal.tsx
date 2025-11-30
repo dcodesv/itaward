@@ -1,6 +1,7 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent, useRef } from "react";
 import Modal from "../Modal";
 import { supabase } from "../../lib/supabase";
+import { uploadAvatar, getPublicAvatarUrl, isSupabaseStorageUrl } from "../../lib/storage";
 import type { Category } from "../../types";
 
 type Props = {
@@ -24,6 +25,10 @@ export default function CreateCollaboratorModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Cargar categorías al abrir el modal
   useEffect(() => {
@@ -68,6 +73,21 @@ export default function CreateCollaboratorModal({
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // Crear preview local
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      // Limpiar URL manual si había una
+      setFormData({ ...formData, avatarUrl: "" });
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -81,8 +101,25 @@ export default function CreateCollaboratorModal({
         return;
       }
 
-      if (!formData.avatarUrl.trim()) {
-        setError("La URL del avatar es obligatoria");
+      let avatarUrl = formData.avatarUrl.trim();
+
+      // Si hay un archivo seleccionado, subirlo primero
+      if (selectedFile) {
+        setIsUploading(true);
+        try {
+          avatarUrl = await uploadAvatar(selectedFile);
+        } catch (uploadError: any) {
+          setError(uploadError.message || "Error al subir la imagen");
+          setIsLoading(false);
+          setIsUploading(false);
+          return;
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
+      if (!avatarUrl) {
+        setError("Debes subir una imagen o proporcionar una URL");
         setIsLoading(false);
         return;
       }
@@ -90,7 +127,7 @@ export default function CreateCollaboratorModal({
       // Insertar colaborador en Supabase
       const collaboratorData = {
         full_name: formData.fullName.trim(),
-        avatar_url: formData.avatarUrl.trim(),
+        avatar_url: avatarUrl,
         role: formData.role.trim() || null,
       };
 
@@ -129,6 +166,11 @@ export default function CreateCollaboratorModal({
 
       // Limpiar formulario y cerrar
       setFormData({ fullName: "", avatarUrl: "", role: "", categoryIds: [] });
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       onSuccess();
       onClose();
     } catch (err) {
@@ -142,7 +184,12 @@ export default function CreateCollaboratorModal({
   const handleClose = () => {
     if (!isLoading) {
       setFormData({ fullName: "", avatarUrl: "", role: "", categoryIds: [] });
+      setSelectedFile(null);
+      setPreviewUrl(null);
       setError(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       onClose();
     }
   };
@@ -182,35 +229,84 @@ export default function CreateCollaboratorModal({
 
         <div>
           <label
-            htmlFor="collaborator-avatar-url"
+            htmlFor="collaborator-avatar"
             className="block text-white/80 text-sm font-medium mb-2"
           >
-            URL del Avatar <span className="text-red-400">*</span>
+            Imagen del Avatar <span className="text-red-400">*</span>
           </label>
+          
+          {/* Input de archivo */}
           <input
-            id="collaborator-avatar-url"
-            type="url"
-            value={formData.avatarUrl}
-            onChange={(e) =>
-              setFormData({ ...formData, avatarUrl: e.target.value })
-            }
-            placeholder="https://ejemplo.com/avatar.jpg"
-            className="w-full bg-white/5 border border-white/15 rounded-lg px-4 py-2 text-white placeholder:text-white/40 focus:outline-none focus:border-[#FFD080] transition"
-            required
-            disabled={isLoading}
+            ref={fileInputRef}
+            id="collaborator-avatar"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={isLoading || isUploading}
           />
-          {formData.avatarUrl && (
-            <div className="mt-2">
-              <img
-                src={formData.avatarUrl}
-                alt="Vista previa"
-                className="size-16 rounded-full object-cover border border-white/20"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            </div>
-          )}
+          
+          <div className="space-y-3">
+            {/* Botón para seleccionar archivo */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || isUploading}
+              className="w-full px-4 py-2 rounded-lg border border-white/15 text-white/70 hover:text-white hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {selectedFile ? "Cambiar imagen" : "Seleccionar imagen"}
+            </button>
+
+            {/* Vista previa de imagen subida */}
+            {previewUrl && (
+              <div className="mt-2">
+                <p className="text-white/60 text-xs mb-2">Vista previa:</p>
+                <img
+                  src={previewUrl}
+                  alt="Vista previa"
+                  className="size-20 rounded-full object-cover border border-white/20"
+                />
+              </div>
+            )}
+
+            {/* Vista previa de URL manual (si no hay archivo seleccionado) */}
+            {!selectedFile && formData.avatarUrl && (
+              <div className="mt-2">
+                <p className="text-white/60 text-xs mb-2">Vista previa (URL):</p>
+                <img
+                  src={formData.avatarUrl}
+                  alt="Vista previa"
+                  className="size-20 rounded-full object-cover border border-white/20"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Input alternativo para URL (opcional) */}
+            {!selectedFile && (
+              <div>
+                <p className="text-white/50 text-xs mb-2">O ingresa una URL:</p>
+                <input
+                  type="url"
+                  value={formData.avatarUrl}
+                  onChange={(e) =>
+                    setFormData({ ...formData, avatarUrl: e.target.value })
+                  }
+                  placeholder="https://ejemplo.com/avatar.jpg"
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-4 py-2 text-white placeholder:text-white/40 focus:outline-none focus:border-[#FFD080] transition text-sm"
+                  disabled={isLoading || isUploading}
+                />
+              </div>
+            )}
+
+            {selectedFile && (
+              <p className="text-white/50 text-xs">
+                Archivo seleccionado: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+              </p>
+            )}
+          </div>
         </div>
 
         <div>
@@ -290,10 +386,10 @@ export default function CreateCollaboratorModal({
           </button>
           <button
             type="submit"
-            disabled={isLoading || isLoadingCategories}
+            disabled={isLoading || isLoadingCategories || isUploading}
             className="flex-1 px-4 py-2 rounded-lg bg-linear-to-r from-[#FFD080] to-[#D4A574] text-[#080808] font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Creando..." : "Crear Colaborador"}
+            {isUploading ? "Subiendo imagen..." : isLoading ? "Creando..." : "Crear Colaborador"}
           </button>
         </div>
       </form>
