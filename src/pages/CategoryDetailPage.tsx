@@ -78,7 +78,7 @@ export default function CategoryDetailPage() {
           return;
         }
 
-        // Obtener las relaciones categoría-colaborador
+        // Obtener las relaciones categoría-colaborador para esta categoría específica
         const { data: relations, error: relationsError } = await supabase
           .from("category_collaborators")
           .select("collaborator_id")
@@ -90,30 +90,56 @@ export default function CategoryDetailPage() {
           return;
         }
 
-        if (!relations || relations.length === 0) {
+        // Obtener todos los colaboradores que tienen relaciones con alguna categoría
+        const { data: allRelations, error: allRelationsError } = await supabase
+          .from("category_collaborators")
+          .select("collaborator_id");
+
+        if (allRelationsError) {
+          console.error("Error al cargar todas las relaciones:", allRelationsError);
+          setIsLoadingCollaborators(false);
+          return;
+        }
+
+        // IDs de colaboradores que tienen relaciones específicas con alguna categoría
+        const collaboratorsWithSpecificCategories = new Set(
+          allRelations?.map((rel: { collaborator_id: number }) => rel.collaborator_id) || []
+        );
+
+        // IDs de colaboradores específicos para esta categoría
+        const specificCollaboratorIds = relations?.map(
+          (rel: { collaborator_id: number }) => rel.collaborator_id
+        ) || [];
+
+        // Cargar todos los colaboradores
+        const { data: allCollaborators, error: allCollaboratorsError } =
+          await supabase
+            .from("collaborators")
+            .select("*")
+            .order("full_name", { ascending: true });
+
+        if (allCollaboratorsError) {
+          console.error("Error al cargar colaboradores:", allCollaboratorsError);
+          setIsLoadingCollaborators(false);
+          return;
+        }
+
+        if (!allCollaborators || allCollaborators.length === 0) {
           setCollaborators([]);
           setIsLoadingCollaborators(false);
           return;
         }
 
-        // Obtener los IDs de colaboradores
-        const collaboratorIds = relations.map(
-          (rel: { collaborator_id: number }) => rel.collaborator_id
-        );
+        // Filtrar colaboradores:
+        // 1. Los que tienen relación específica con esta categoría
+        // 2. Los que NO tienen relaciones con ninguna categoría (pueden ser nominados en todas)
+        const filteredCollaborators = allCollaborators.filter((collab: { id: number }) => {
+          const hasSpecificRelation = specificCollaboratorIds.includes(collab.id);
+          const hasNoRelations = !collaboratorsWithSpecificCategories.has(collab.id);
+          return hasSpecificRelation || hasNoRelations;
+        });
 
-        // Cargar los colaboradores
-        const { data: collaboratorsData, error: collaboratorsError } =
-          await supabase
-            .from("collaborators")
-            .select("*")
-            .in("id", collaboratorIds)
-            .order("full_name", { ascending: true });
-
-        if (collaboratorsError) {
-          console.error("Error al cargar colaboradores:", collaboratorsError);
-          setIsLoadingCollaborators(false);
-          return;
-        }
+        const collaboratorsData = filteredCollaborators;
 
         if (collaboratorsData && Array.isArray(collaboratorsData)) {
           const mappedCollaborators: Collaborator[] = collaboratorsData.map(

@@ -20,6 +20,7 @@ export default function CreateCollaboratorModal({
     avatarUrl: "",
     role: "",
     categoryIds: [] as number[],
+    allCategories: true, // Por defecto puede ser nominado en todas las categorías
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -144,8 +145,9 @@ export default function CreateCollaboratorModal({
         return;
       }
 
-      // Asociar con categorías seleccionadas
-      if (formData.categoryIds.length > 0) {
+      // Asociar con categorías seleccionadas solo si NO está marcado "todas las categorías"
+      // Si allCategories es true, no creamos relaciones (puede ser nominado en todas)
+      if (!formData.allCategories && formData.categoryIds.length > 0) {
         const categoryCollaborators = formData.categoryIds.map(
           (categoryId) => ({
             category_id: categoryId,
@@ -165,7 +167,7 @@ export default function CreateCollaboratorModal({
       }
 
       // Limpiar formulario y cerrar
-      setFormData({ fullName: "", avatarUrl: "", role: "", categoryIds: [] });
+      setFormData({ fullName: "", avatarUrl: "", role: "", categoryIds: [], allCategories: true });
       setSelectedFile(null);
       setPreviewUrl(null);
       if (fileInputRef.current) {
@@ -183,7 +185,7 @@ export default function CreateCollaboratorModal({
 
   const handleClose = () => {
     if (!isLoading) {
-      setFormData({ fullName: "", avatarUrl: "", role: "", categoryIds: [] });
+      setFormData({ fullName: "", avatarUrl: "", role: "", categoryIds: [], allCategories: true });
       setSelectedFile(null);
       setPreviewUrl(null);
       setError(null);
@@ -329,44 +331,71 @@ export default function CreateCollaboratorModal({
 
         <div>
           <label className="block text-white/80 text-sm font-medium mb-2">
-            Categorías
+            Disponibilidad en Categorías
           </label>
-          {isLoadingCategories ? (
-            <p className="text-white/50 text-xs">Cargando categorías...</p>
-          ) : (
-            <div className="max-h-40 overflow-y-auto space-y-2 p-3 rounded-lg bg-white/5 border border-white/10">
-              {categories.length > 0 ? (
-                categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.categoryIds.includes(category.id)}
-                      onChange={() => toggleCategory(category.id)}
-                      disabled={isLoading}
-                      className="rounded border-white/20 text-[#FFD080] focus:ring-[#FFD080]"
-                    />
-                    <span className="text-white text-sm">
-                      {category.emoji && (
-                        <span className="mr-1">{category.emoji}</span>
-                      )}
-                      {category.name}
-                    </span>
-                  </label>
-                ))
+          
+          {/* Checkbox para todas las categorías */}
+          <div className="mb-3 p-3 rounded-lg bg-white/5 border border-white/10">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.allCategories}
+                onChange={(e) =>
+                  setFormData({ ...formData, allCategories: e.target.checked, categoryIds: [] })
+                }
+                disabled={isLoading}
+                className="rounded border-white/20 text-[#FFD080] focus:ring-[#FFD080]"
+              />
+              <span className="text-white text-sm font-medium">
+                Puede ser nominado en todas las categorías
+              </span>
+            </label>
+            <p className="mt-1 text-white/50 text-xs ml-6">
+              Si está marcado, el colaborador estará disponible en todas las categorías por defecto
+            </p>
+          </div>
+
+          {/* Selección de categorías específicas (solo si no está marcado "todas") */}
+          {!formData.allCategories && (
+            <>
+              {isLoadingCategories ? (
+                <p className="text-white/50 text-xs">Cargando categorías...</p>
               ) : (
-                <p className="text-white/50 text-xs">
-                  No hay categorías disponibles
-                </p>
+                <div className="max-h-40 overflow-y-auto space-y-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <label
+                        key={category.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.categoryIds.includes(category.id)}
+                          onChange={() => toggleCategory(category.id)}
+                          disabled={isLoading}
+                          className="rounded border-white/20 text-[#FFD080] focus:ring-[#FFD080]"
+                        />
+                        <span className="text-white text-sm">
+                          {category.emoji && (
+                            <span className="mr-1">{category.emoji}</span>
+                          )}
+                          {category.name}
+                        </span>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="text-white/50 text-xs">
+                      No hay categorías disponibles
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
+              <p className="mt-1 text-white/50 text-xs">
+                Selecciona las categorías específicas en las que este colaborador puede ser
+                nominado (opcional)
+              </p>
+            </>
           )}
-          <p className="mt-1 text-white/50 text-xs">
-            Selecciona las categorías en las que este colaborador puede ser
-            nominado
-          </p>
         </div>
 
         {error && (
