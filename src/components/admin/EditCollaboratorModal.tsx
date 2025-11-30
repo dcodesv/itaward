@@ -127,10 +127,8 @@ export default function EditCollaboratorModal({
         allCategories: allCategories,
       });
       setOriginalAvatarUrl(avatarUrl);
-      // Si es una URL de Supabase Storage, mostrar preview
-      if (isSupabaseStorageUrl(avatarUrl)) {
-        setPreviewUrl(avatarUrl);
-      }
+      // No establecer previewUrl aquí, solo cuando se seleccione un archivo nuevo
+      setPreviewUrl(null);
     } catch (error) {
       console.error("Error inesperado:", error);
       setError("Error al cargar datos");
@@ -334,10 +332,10 @@ export default function EditCollaboratorModal({
                 {selectedFile ? "Cambiar imagen" : "Seleccionar nueva imagen"}
               </button>
 
-              {/* Vista previa de imagen subida */}
-              {previewUrl && (
+              {/* Vista previa de imagen nueva subida */}
+              {previewUrl && selectedFile && (
                 <div className="mt-2">
-                  <p className="text-white/60 text-xs mb-2">Vista previa:</p>
+                  <p className="text-white/60 text-xs mb-2">Vista previa (nueva imagen):</p>
                   <img
                     src={previewUrl}
                     alt="Vista previa"
@@ -346,7 +344,7 @@ export default function EditCollaboratorModal({
                 </div>
               )}
 
-              {/* Vista previa de URL actual o manual (si no hay archivo seleccionado) */}
+              {/* Vista previa de imagen actual (si no hay archivo nuevo seleccionado) */}
               {!selectedFile && formData.avatarUrl && (
                 <div className="mt-2">
                   <p className="text-white/60 text-xs mb-2">
@@ -354,7 +352,7 @@ export default function EditCollaboratorModal({
                   </p>
                   <img
                     src={formData.avatarUrl}
-                    alt="Vista previa"
+                    alt="Imagen actual"
                     className="size-20 rounded-full object-cover border border-white/20"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
