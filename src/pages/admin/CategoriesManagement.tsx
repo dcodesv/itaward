@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import Icon from "../../components/Icon";
-import { categoryIdToCollaborators } from "../../data/collaborators";
 import { supabase } from "../../lib/supabase";
 import CreateCategoryModal from "../../components/admin/CreateCategoryModal";
 import EditCategoryModal from "../../components/admin/EditCategoryModal";
@@ -9,6 +8,9 @@ import type { Category } from "../../types";
 
 export default function CategoriesManagement() {
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+  const [nominationsByCategory, setNominationsByCategory] = useState<
+    Record<number, number>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -54,12 +56,57 @@ export default function CategoriesManagement() {
     }
   };
 
+  // Cargar nominaciones para contar colaboradores nominados por categoría
+  const loadNominations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("nominations")
+        .select("category_id, collaborator_id");
+
+      if (error) {
+        console.error("Error al cargar nominaciones:", error);
+        return;
+      }
+
+      if (data && Array.isArray(data)) {
+        // Contar colaboradores únicos nominados por categoría
+        const nominationsCount: Record<number, Set<number>> = {};
+        
+        data.forEach(
+          (nom: { category_id: number; collaborator_id: number }) => {
+            if (!nominationsCount[nom.category_id]) {
+              nominationsCount[nom.category_id] = new Set();
+            }
+            nominationsCount[nom.category_id].add(nom.collaborator_id);
+          }
+        );
+
+        // Convertir Sets a números
+        const counts: Record<number, number> = {};
+        Object.keys(nominationsCount).forEach((categoryId) => {
+          counts[parseInt(categoryId, 10)] = nominationsCount[parseInt(categoryId, 10)].size;
+        });
+
+        setNominationsByCategory(counts);
+      }
+    } catch (error) {
+      console.error("Error inesperado al cargar nominaciones:", error);
+    }
+  };
+
   useEffect(() => {
-    loadCategories();
+    const loadAllData = async () => {
+      await Promise.all([
+        loadCategories(),
+        loadNominations(),
+      ]);
+    };
+    loadAllData();
   }, []);
 
   const handleSuccess = () => {
     loadCategories(); // Recargar categorías después de crear/editar
+    loadNominations(); // Recargar nominaciones
   };
 
   const handleEditCategory = (category: Category) => {
@@ -319,8 +366,9 @@ export default function CategoriesManagement() {
                 </>
               ) : (
                 categoriesList.map((category) => {
-                  const nomineesCount =
-                    categoryIdToCollaborators[category.id]?.length ?? 0;
+                  // Número de colaboradores únicos que han sido nominados en esta categoría
+                  const nomineesCount = nominationsByCategory[category.id] || 0;
+                  
                   return (
                     <tr
                       key={category.id}

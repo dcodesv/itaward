@@ -16,6 +16,9 @@ export default function PeopleManagement() {
   const [categoryRelations, setCategoryRelations] = useState<
     Record<number, number[]>
   >({});
+  const [nominations, setNominations] = useState<
+    Record<number, { categoryIds: number[]; total: number }>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -123,15 +126,70 @@ export default function PeopleManagement() {
     }
   };
 
+  // Cargar nominaciones para calcular totales y categorías nominadas
+  const loadNominations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("nominations")
+        .select("collaborator_id, category_id");
+
+      if (error) {
+        console.error("Error al cargar nominaciones:", error);
+        return;
+      }
+
+      if (data && Array.isArray(data)) {
+        const nominationsData: Record<
+          number,
+          { categoryIds: Set<number>; total: number }
+        > = {};
+
+        data.forEach(
+          (nom: { collaborator_id: number; category_id: number }) => {
+            if (!nominationsData[nom.collaborator_id]) {
+              nominationsData[nom.collaborator_id] = {
+                categoryIds: new Set(),
+                total: 0,
+              };
+            }
+            nominationsData[nom.collaborator_id].categoryIds.add(
+              nom.category_id
+            );
+            nominationsData[nom.collaborator_id].total += 1;
+          }
+        );
+
+        // Convertir Sets a arrays
+        const formattedNominations: Record<
+          number,
+          { categoryIds: number[]; total: number }
+        > = {};
+        Object.keys(nominationsData).forEach((collabId) => {
+          const id = parseInt(collabId, 10);
+          formattedNominations[id] = {
+            categoryIds: Array.from(nominationsData[id].categoryIds),
+            total: nominationsData[id].total,
+          };
+        });
+
+        setNominations(formattedNominations);
+      }
+    } catch (error) {
+      console.error("Error inesperado al cargar nominaciones:", error);
+    }
+  };
+
   useEffect(() => {
     loadCollaborators();
     loadCategories();
     loadCategoryRelations();
+    loadNominations();
   }, []);
 
   const handleSuccess = () => {
     loadCollaborators();
     loadCategoryRelations();
+    loadNominations();
   };
 
   const handleEdit = (collaboratorId: number) => {
@@ -449,36 +507,39 @@ export default function PeopleManagement() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2 max-w-md">
-                        {collaborator.categories.length > 0 ? (
-                          collaborator.categories.map((categoryId) => {
-                            const category = categories.find(
-                              (c) => c.id === categoryId
-                            );
-                            return (
-                              <span
-                                key={categoryId}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#FFD080]/20 text-[#FFD080] border border-[#FFD080]/30"
-                                title={category?.description}
-                              >
-                                {getCategoryEmoji(categoryId) && (
-                                  <span className="text-xs">
-                                    {getCategoryEmoji(categoryId)}
-                                  </span>
-                                )}
-                                <span>{getCategoryName(categoryId)}</span>
-                              </span>
-                            );
-                          })
+                        {nominations[collaborator.id]?.categoryIds &&
+                        nominations[collaborator.id].categoryIds.length > 0 ? (
+                          nominations[collaborator.id].categoryIds.map(
+                            (categoryId) => {
+                              const category = categories.find(
+                                (c) => c.id === categoryId
+                              );
+                              return (
+                                <span
+                                  key={categoryId}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#FFD080]/20 text-[#FFD080] border border-[#FFD080]/30"
+                                  title={category?.description}
+                                >
+                                  {getCategoryEmoji(categoryId) && (
+                                    <span className="text-xs">
+                                      {getCategoryEmoji(categoryId)}
+                                    </span>
+                                  )}
+                                  <span>{getCategoryName(categoryId)}</span>
+                                </span>
+                              );
+                            }
+                          )
                         ) : (
                           <span className="text-white/40 text-xs">
-                            Sin categorías
+                            Sin nominaciones
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-white border border-white/20 min-w-8">
-                        {collaborator.categories.length}
+                        {nominations[collaborator.id]?.total || 0}
                       </span>
                     </td>
                     <td className="px-4 py-3">
