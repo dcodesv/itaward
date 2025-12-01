@@ -28,6 +28,9 @@ export default function UsersManagement() {
   >({});
   const [categories, setCategories] = useState<Category[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [nominationsByCategory, setNominationsByCategory] = useState<
+    Record<number, number>
+  >({});
   const totalCategories = categories.length;
 
   // Cargar votantes desde Supabase
@@ -121,6 +124,48 @@ export default function UsersManagement() {
     }
   };
 
+  // Cargar nominaciones para contar colaboradores nominados por categoría
+  const loadNominationsByCategory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("nominations")
+        .select("category_id, collaborator_id");
+
+      if (error) {
+        console.error("Error al cargar nominaciones por categoría:", error);
+        return;
+      }
+
+      if (data && Array.isArray(data)) {
+        // Contar colaboradores únicos nominados por categoría
+        const nominationsCount: Record<number, Set<number>> = {};
+
+        data.forEach(
+          (nom: { category_id: number; collaborator_id: number }) => {
+            if (!nominationsCount[nom.category_id]) {
+              nominationsCount[nom.category_id] = new Set();
+            }
+            nominationsCount[nom.category_id].add(nom.collaborator_id);
+          }
+        );
+
+        // Convertir Sets a números
+        const counts: Record<number, number> = {};
+        Object.keys(nominationsCount).forEach((categoryId) => {
+          counts[parseInt(categoryId, 10)] =
+            nominationsCount[parseInt(categoryId, 10)].size;
+        });
+
+        setNominationsByCategory(counts);
+      }
+    } catch (error) {
+      console.error(
+        "Error inesperado al cargar nominaciones por categoría:",
+        error
+      );
+    }
+  };
+
   // Cargar colaboradores desde Supabase
   const loadCollaborators = async () => {
     try {
@@ -160,6 +205,7 @@ export default function UsersManagement() {
     loadNominations();
     loadCategories();
     loadCollaborators();
+    loadNominationsByCategory();
   }, []);
 
   const handleSuccess = () => {
@@ -582,6 +628,9 @@ export default function UsersManagement() {
 
                                     if (!category || !collaborator) return null;
 
+                                    const nomineesCount =
+                                      nominationsByCategory[categoryId] || 0;
+
                                     return (
                                       <div
                                         key={categoryId}
@@ -596,6 +645,12 @@ export default function UsersManagement() {
                                           </p>
                                           <p className="text-white/60 text-xs truncate">
                                             {collaborator.fullName}
+                                          </p>
+                                          <p className="text-white/40 text-[10px] mt-1">
+                                            {nomineesCount}{" "}
+                                            {nomineesCount === 1
+                                              ? "nominado"
+                                              : "nominados"}
                                           </p>
                                         </div>
                                       </div>

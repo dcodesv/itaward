@@ -417,6 +417,16 @@ export default function PeopleManagement() {
     return categories.find((c) => c.id === categoryId)?.emoji;
   };
 
+  // Calcular KPIs
+  const totalCollaborators = collaborators.length;
+  const collaboratorsWithNominations = useMemo(() => {
+    return collaborators.filter((c) => (nominations[c.id]?.total || 0) > 0).length;
+  }, [collaborators, nominations]);
+  const collaboratorsWithoutNominations = totalCollaborators - collaboratorsWithNominations;
+  const totalNominations = useMemo(() => {
+    return Object.values(nominations).reduce((sum, nom) => sum + (nom?.total || 0), 0);
+  }, [nominations]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
@@ -434,6 +444,59 @@ export default function PeopleManagement() {
         >
           + Nueva Persona
         </button>
+      </div>
+
+      {/* KPIs */}
+      <div className="flex items-center gap-2 sm:gap-4">
+        {isLoading ? (
+          <>
+            {[...Array(4)].map((_, index) => (
+              <div
+                key={index}
+                className="flex-1 sm:flex-none rounded-lg bg-black/30 border border-white/10 px-3 sm:px-4 py-2 relative overflow-hidden animate-pulse"
+              >
+                <div className="h-3 bg-white/10 rounded w-20 mb-2" />
+                <div className="h-6 bg-white/10 rounded w-12" />
+                <div className="absolute inset-0 animate-shimmer pointer-events-none" />
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="flex-1 sm:flex-none rounded-lg bg-black/30 border border-white/10 px-3 sm:px-4 py-2">
+              <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wide">
+                Total Colaboradores
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-white mt-0.5">
+                {totalCollaborators}
+              </p>
+            </div>
+            <div className="flex-1 sm:flex-none rounded-lg bg-black/30 border border-white/10 px-3 sm:px-4 py-2">
+              <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wide">
+                Con Nominaciones
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-[#FFD080] mt-0.5">
+                {collaboratorsWithNominations}
+              </p>
+            </div>
+            <div className="flex-1 sm:flex-none rounded-lg bg-black/30 border border-white/10 px-3 sm:px-4 py-2">
+              <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wide">
+                Sin Nominaciones
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-white/60 mt-0.5">
+                {collaboratorsWithoutNominations}
+              </p>
+            </div>
+            <div className="flex-1 sm:flex-none rounded-lg bg-black/30 border border-white/10 px-3 sm:px-4 py-2">
+              <p className="text-[10px] sm:text-xs text-white/60 uppercase tracking-wide">
+                Total Nominaciones
+              </p>
+              <p className="text-lg sm:text-xl font-semibold text-white mt-0.5">
+                {totalNominations}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Buscador */}

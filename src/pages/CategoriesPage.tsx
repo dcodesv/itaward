@@ -1,29 +1,33 @@
 import { useState, useEffect } from "react";
 import CategoryCard from "../components/CategoryCard";
 import { supabase } from "../lib/supabase";
-import { categoryIdToCollaborators } from "../data/collaborators";
 import type { Category } from "../types";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [nominationsByCategory, setNominationsByCategory] = useState<
+    Record<number, number>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadAllData = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
+
+        // Cargar categorías
+        const { data: categoriesData, error: categoriesError } = await supabase
           .from("categories")
           .select("*")
           .order("name", { ascending: true });
 
-        if (error) {
-          console.error("Error al cargar categorías:", error);
+        if (categoriesError) {
+          console.error("Error al cargar categorías:", categoriesError);
           return;
         }
 
-        if (data && Array.isArray(data)) {
-          const mappedCategories: Category[] = data.map(
+        if (categoriesData && Array.isArray(categoriesData)) {
+          const mappedCategories: Category[] = categoriesData.map(
             (cat: {
               id: number;
               name: string;
@@ -38,14 +42,47 @@ export default function CategoriesPage() {
           );
           setCategories(mappedCategories);
         }
+
+        // Cargar nominaciones para contar colaboradores nominados por categoría
+        const { data: nominationsData, error: nominationsError } = await supabase
+          .from("nominations")
+          .select("category_id, collaborator_id");
+
+        if (nominationsError) {
+          console.error("Error al cargar nominaciones:", nominationsError);
+          return;
+        }
+
+        if (nominationsData && Array.isArray(nominationsData)) {
+          // Contar colaboradores únicos nominados por categoría
+          const nominationsCount: Record<number, Set<number>> = {};
+
+          nominationsData.forEach(
+            (nom: { category_id: number; collaborator_id: number }) => {
+              if (!nominationsCount[nom.category_id]) {
+                nominationsCount[nom.category_id] = new Set();
+              }
+              nominationsCount[nom.category_id].add(nom.collaborator_id);
+            }
+          );
+
+          // Convertir Sets a números
+          const counts: Record<number, number> = {};
+          Object.keys(nominationsCount).forEach((categoryId) => {
+            counts[parseInt(categoryId, 10)] =
+              nominationsCount[parseInt(categoryId, 10)].size;
+          });
+
+          setNominationsByCategory(counts);
+        }
       } catch (error) {
-        console.error("Error inesperado al cargar categorías:", error);
+        console.error("Error inesperado al cargar datos:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadCategories();
+    loadAllData();
   }, []);
 
   return (
@@ -98,7 +135,7 @@ export default function CategoriesPage() {
                 <CategoryCard
                   key={c.id}
                   category={c}
-                  nomineesCount={categoryIdToCollaborators[c.id]?.length ?? 0}
+                  nomineesCount={nominationsByCategory[c.id] || 0}
                 />
               ))}
             </div>
