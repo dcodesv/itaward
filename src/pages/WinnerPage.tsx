@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import type { Category, Collaborator } from "../types";
 import Confetti from "react-confetti";
 import Icon from "../components/Icon";
+import logoAward from "../assets/ITHA2025.png";
 
 export default function WinnerPage() {
   const [searchParams] = useSearchParams();
@@ -43,17 +44,24 @@ export default function WinnerPage() {
         const categoryIdNum = parseInt(categoryId, 10);
 
         // Cargar categoría
-        const { data: categoryData, error: categoryError } = await supabase
+        const { data: categoryDataRaw, error: categoryError } = await supabase
           .from("categories")
           .select("*")
           .eq("id", categoryIdNum)
           .single();
 
-        if (categoryError || !categoryData) {
+        if (categoryError || !categoryDataRaw) {
           console.error("Error al cargar categoría:", categoryError);
           setIsLoading(false);
           return;
         }
+
+        const categoryData = categoryDataRaw as {
+          id: number;
+          name: string;
+          description: string | null;
+          emoji: string | null;
+        };
 
         setCategory({
           id: categoryData.id,
@@ -111,11 +119,18 @@ export default function WinnerPage() {
           return;
         }
 
+        const collaborator = collaboratorData as {
+          id: number;
+          full_name: string;
+          avatar_url: string;
+          role: string | null;
+        };
+
         setWinner({
-          id: collaboratorData.id,
-          fullName: collaboratorData.full_name,
-          avatarUrl: collaboratorData.avatar_url,
-          role: collaboratorData.role || undefined,
+          id: collaborator.id,
+          fullName: collaborator.full_name,
+          avatarUrl: collaborator.avatar_url,
+          role: collaborator.role || undefined,
         });
 
         setVotes(selected.count);
@@ -152,16 +167,8 @@ export default function WinnerPage() {
     );
   }
 
-  const positionLabels: Record<string, { label: string; icon: string }> = {
-    "1": { label: "🥇 Primer Lugar", icon: "mdi:trophy" },
-    "2": { label: "🥈 Segundo Lugar", icon: "mdi:trophy-variant" },
-    "3": { label: "🥉 Tercer Lugar", icon: "mdi:trophy-outline" },
-  };
-
-  const positionInfo = positionLabels[position] || positionLabels["1"];
-
   return (
-    <div className="min-h-screen bg-linear-to-l from-[#080808] via-[#101019] to-[#080808] relative overflow-hidden flex items-center justify-center -mt-12 pt-8">
+    <div className="min-h-screen bg-linear-to-l from-[#080808] via-[#101019] to-[#080808] relative overflow-hidden flex items-center justify-center">
       <Confetti
         width={windowSize.width}
         height={windowSize.height}
@@ -179,8 +186,19 @@ export default function WinnerPage() {
 
       <div className="relative z-10 w-full max-w-3xl px-4 py-4 sm:py-6 md:py-8">
         <div className="rounded-2xl sm:rounded-3xl bg-white/5 border border-white/10 p-2 sm:p-4 md:p-6 backdrop-blur-xl text-center">
+          {/* Logo del evento */}
+          <div className="mb-5 sm:mb-6 flex justify-center">
+            <img
+              src={logoAward}
+              alt="IT Awards 2025"
+              className="h-12 sm:h-14 md:h-16 w-auto drop-shadow"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
+
           {/* Categoría */}
-          <div className="mb-4 sm:mb-5">
+          <div className="mb-5 sm:mb-6">
             <p className="text-white/60 uppercase tracking-[0.15em] sm:tracking-[0.2em] text-xs sm:text-sm mb-2">
               {category.emoji && (
                 <span className="text-xl sm:text-2xl mr-2">
@@ -189,22 +207,7 @@ export default function WinnerPage() {
               )}
               {category.name}
             </p>
-            <div className="h-0.5 sm:h-1 w-24 sm:w-32 bg-gradient-to-r from-transparent via-[#FFD080] to-transparent mx-auto mb-3 sm:mb-4" />
-          </div>
-
-          {/* Posición */}
-          <div className="mb-5 sm:mb-6">
-            <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-1 sm:py-2 rounded-full bg-[#FFD080]/20 border border-[#FFD080]/30">
-              <Icon
-                icon={positionInfo.icon}
-                className="text-[#FFD080]"
-                width={24}
-                height={24}
-              />
-              <span className="text-[#FFD080] font-semibold text-sm sm:text-base md:text-lg uppercase tracking-wide">
-                {positionInfo.label}
-              </span>
-            </div>
+            <div className="h-0.5 sm:h-1 w-24 sm:w-32 bg-linear-to-r from-transparent via-[#FFD080] to-transparent mx-auto mb-3 sm:mb-4" />
           </div>
 
           {/* Imagen del ganador */}

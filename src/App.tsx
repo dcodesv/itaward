@@ -34,12 +34,14 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
+        {/* Página de ganador - Sin TopNav ni Snowfall */}
+        <Route path="ganador" element={<WinnerPage />} />
+
         {/* Public Routes - Con TopNav y Snowfall */}
         <Route path="/" element={<PublicLayout />}>
           <Route index element={<LandingPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="participantes" element={<ParticipantsPage />} />
-          <Route path="ganador" element={<WinnerPage />} />
           <Route
             path="mis-votos"
             element={
