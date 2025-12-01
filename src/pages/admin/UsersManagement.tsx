@@ -22,6 +22,7 @@ export default function UsersManagement() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedVoterId, setSelectedVoterId] = useState<number | null>(null);
   const [editingVoter, setEditingVoter] = useState<Voter | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [nominations, setNominations] = useState<
     Record<number, Record<number, number>>
   >({});
@@ -320,6 +321,20 @@ export default function UsersManagement() {
     return nominations[voterId] || {};
   };
 
+  // Filtrar votantes por término de búsqueda
+  const filteredVoters = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return voters;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    return voters.filter(
+      (voter) =>
+        voter.employee_code.toLowerCase().includes(searchLower) ||
+        voter.full_name.toLowerCase().includes(searchLower)
+    );
+  }, [voters, searchTerm]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
@@ -393,6 +408,38 @@ export default function UsersManagement() {
         )}
       </div>
 
+      {/* Buscador */}
+      <div className="relative">
+        <div className="relative">
+          <Icon
+            icon="mdi:magnify"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40"
+            width={20}
+            height={20}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por código de empleado o nombre..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#FFD080] focus:outline-none text-sm"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition"
+            >
+              <Icon icon="mdi:close" width={18} height={18} />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <p className="text-white/60 text-xs mt-2">
+            {filteredVoters.length} resultado(s) encontrado(s)
+          </p>
+        )}
+      </div>
+
       <div className="rounded-2xl bg-black/20 border border-white/10 backdrop-blur overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -446,7 +493,7 @@ export default function UsersManagement() {
                   ))}
                 </>
               ) : (
-                voters.map((voter) => {
+                filteredVoters.map((voter) => {
                   const categoriesVoted = getCategoriesVotedByVoter(voter.id);
                   const voterNominations = getVoterNominations(voter.id);
                   const isExpanded = selectedVoterId === voter.id;
@@ -572,6 +619,20 @@ export default function UsersManagement() {
             <p className="text-white/70 text-sm">
               No hay votantes registrados aún.
             </p>
+          </div>
+        )}
+
+        {!isLoading && voters.length > 0 && filteredVoters.length === 0 && (
+          <div className="p-8 text-center">
+            <p className="text-white/70 text-sm mb-2">
+              No se encontraron votantes que coincidan con "{searchTerm}".
+            </p>
+            <button
+              onClick={() => setSearchTerm("")}
+              className="text-[#FFD080] hover:text-[#FFD080]/80 text-sm underline"
+            >
+              Limpiar búsqueda
+            </button>
           </div>
         )}
       </div>
