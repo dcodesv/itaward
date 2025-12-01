@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
 import Icon from "../../components/Icon";
 import { supabase } from "../../lib/supabase";
@@ -15,6 +15,7 @@ export default function CategoriesManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Cargar categorías desde Supabase
   const loadCategories = async () => {
@@ -71,7 +72,7 @@ export default function CategoriesManagement() {
       if (data && Array.isArray(data)) {
         // Contar colaboradores únicos nominados por categoría
         const nominationsCount: Record<number, Set<number>> = {};
-        
+
         data.forEach(
           (nom: { category_id: number; collaborator_id: number }) => {
             if (!nominationsCount[nom.category_id]) {
@@ -84,7 +85,8 @@ export default function CategoriesManagement() {
         // Convertir Sets a números
         const counts: Record<number, number> = {};
         Object.keys(nominationsCount).forEach((categoryId) => {
-          counts[parseInt(categoryId, 10)] = nominationsCount[parseInt(categoryId, 10)].size;
+          counts[parseInt(categoryId, 10)] =
+            nominationsCount[parseInt(categoryId, 10)].size;
         });
 
         setNominationsByCategory(counts);
@@ -96,10 +98,7 @@ export default function CategoriesManagement() {
 
   useEffect(() => {
     const loadAllData = async () => {
-      await Promise.all([
-        loadCategories(),
-        loadNominations(),
-      ]);
+      await Promise.all([loadCategories(), loadNominations()]);
     };
     loadAllData();
   }, []);
@@ -118,6 +117,21 @@ export default function CategoriesManagement() {
     setIsEditModalOpen(false);
     setEditingCategory(null);
   };
+
+  // Filtrar categorías por término de búsqueda
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return categoriesList;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    return categoriesList.filter(
+      (category) =>
+        category.name.toLowerCase().includes(searchLower) ||
+        (category.description &&
+          category.description.toLowerCase().includes(searchLower))
+    );
+  }, [categoriesList, searchTerm]);
 
   const handleDeleteCategory = async (category: Category) => {
     // Verificar si la categoría tiene colaboradores asociados
@@ -315,6 +329,38 @@ export default function CategoriesManagement() {
         </button>
       </div>
 
+      {/* Buscador */}
+      <div className="relative">
+        <div className="relative">
+          <Icon
+            icon="mdi:magnify"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40"
+            width={20}
+            height={20}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por nombre o descripción..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#FFD080] focus:outline-none text-sm"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition"
+            >
+              <Icon icon="mdi:close" width={18} height={18} />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <p className="text-white/60 text-xs mt-2">
+            {filteredCategories.length} resultado(s) encontrado(s)
+          </p>
+        )}
+      </div>
+
       <div className="rounded-2xl bg-black/20 border border-white/10 backdrop-blur overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -365,10 +411,10 @@ export default function CategoriesManagement() {
                   ))}
                 </>
               ) : (
-                categoriesList.map((category) => {
+                filteredCategories.map((category) => {
                   // Número de colaboradores únicos que han sido nominados en esta categoría
                   const nomineesCount = nominationsByCategory[category.id] || 0;
-                  
+
                   return (
                     <tr
                       key={category.id}
@@ -433,6 +479,22 @@ export default function CategoriesManagement() {
             </p>
           </div>
         )}
+
+        {!isLoading &&
+          categoriesList.length > 0 &&
+          filteredCategories.length === 0 && (
+            <div className="p-8 text-center">
+              <p className="text-white/70 text-sm mb-2">
+                No se encontraron categorías que coincidan con "{searchTerm}".
+              </p>
+              <button
+                onClick={() => setSearchTerm("")}
+                className="text-[#FFD080] hover:text-[#FFD080]/80 text-sm underline"
+              >
+                Limpiar búsqueda
+              </button>
+            </div>
+          )}
       </div>
 
       <CreateCategoryModal

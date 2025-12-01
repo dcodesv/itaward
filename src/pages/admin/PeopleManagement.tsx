@@ -25,6 +25,7 @@ export default function PeopleManagement() {
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<
     number | null
   >(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Cargar colaboradores desde Supabase
   const loadCollaborators = async () => {
@@ -381,10 +382,25 @@ export default function PeopleManagement() {
   };
 
   // Combinar colaboradores con sus categorías
+  // Filtrar colaboradores por término de búsqueda
+  const filteredCollaborators = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return collaborators;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    return collaborators.filter(
+      (collaborator) =>
+        collaborator.fullName.toLowerCase().includes(searchLower) ||
+        (collaborator.role &&
+          collaborator.role.toLowerCase().includes(searchLower))
+    );
+  }, [collaborators, searchTerm]);
+
   const collaboratorsWithCategories = useMemo<
     CollaboratorWithCategories[]
   >(() => {
-    return collaborators.map((collaborator) => ({
+    return filteredCollaborators.map((collaborator) => ({
       ...collaborator,
       categories: categoryRelations[collaborator.id] || [],
     }));
@@ -418,6 +434,38 @@ export default function PeopleManagement() {
         >
           + Nueva Persona
         </button>
+      </div>
+
+      {/* Buscador */}
+      <div className="relative">
+        <div className="relative">
+          <Icon
+            icon="mdi:magnify"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40"
+            width={20}
+            height={20}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por nombre o rol..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:border-[#FFD080] focus:outline-none text-sm"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition"
+            >
+              <Icon icon="mdi:close" width={18} height={18} />
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <p className="text-white/60 text-xs mt-2">
+            {collaboratorsWithCategories.length} resultado(s) encontrado(s)
+          </p>
+        )}
       </div>
 
       <div className="rounded-2xl bg-black/20 border border-white/10 backdrop-blur overflow-hidden">
