@@ -4,6 +4,7 @@ import Icon from "../../components/Icon";
 import { supabase } from "../../lib/supabase";
 import CreateVoterModal from "../../components/admin/CreateVoterModal";
 import EditVoterModal from "../../components/admin/EditVoterModal";
+import UploadVotersExcelModal from "../../components/admin/UploadVotersExcelModal";
 import type { Category, Collaborator } from "../../types";
 
 type Voter = {
@@ -18,6 +19,7 @@ export default function UsersManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedVoterId, setSelectedVoterId] = useState<number | null>(null);
   const [editingVoter, setEditingVoter] = useState<Voter | null>(null);
   const [nominations, setNominations] = useState<
@@ -329,12 +331,22 @@ export default function UsersManagement() {
             Gestiona y visualiza el registro de empleados que han votado
           </p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg bg-linear-to-r from-[#FFD080] to-[#D4A574] text-[#080808] text-xs sm:text-sm font-semibold hover:opacity-90 transition"
-        >
-          + Nuevo Votante
-        </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition flex items-center justify-center gap-2 text-xs sm:text-sm"
+          >
+            <Icon icon="mdi:file-excel" width={18} height={18} />
+            <span className="hidden sm:inline">Importar Excel</span>
+            <span className="sm:hidden">Excel</span>
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg bg-linear-to-r from-[#FFD080] to-[#D4A574] text-[#080808] text-xs sm:text-sm font-semibold hover:opacity-90 transition"
+          >
+            + Nuevo Votante
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
@@ -578,6 +590,14 @@ export default function UsersManagement() {
           handleCloseEditModal();
         }}
         voter={editingVoter}
+      />
+
+      <UploadVotersExcelModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onSuccess={() => {
+          loadVoters();
+        }}
       />
     </div>
   );
