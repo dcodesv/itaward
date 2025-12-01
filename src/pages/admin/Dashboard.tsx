@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 import Icon from "../../components/Icon";
 import { supabase } from "../../lib/supabase";
+import { getVotingStatus, setVotingStatus } from "../../lib/votingStatus";
+import SelectWinnerModal from "../../components/admin/SelectWinnerModal";
 import type { Category, Collaborator } from "../../types";
 
 type NominationData = {
@@ -21,6 +24,22 @@ export default function Dashboard() {
   const [nominations, setNominations] = useState<NominationData[]>([]);
   const [voters, setVoters] = useState<{ id: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [votingOpen, setVotingOpen] = useState<boolean>(true);
+  const [isSelectWinnerModalOpen, setIsSelectWinnerModalOpen] = useState(false);
+  const [selectedCategoryForWinner, setSelectedCategoryForWinner] = useState<{
+    id: number;
+    name: string;
+    emoji?: string;
+  } | null>(null);
+
+  // Cargar estado de votaciones
+  useEffect(() => {
+    const loadVotingStatus = async () => {
+      const status = await getVotingStatus();
+      setVotingOpen(status);
+    };
+    loadVotingStatus();
+  }, []);
 
   // Cargar todos los datos desde Supabase
   useEffect(() => {
@@ -312,15 +331,95 @@ export default function Dashboard() {
     );
   }
 
+  const handleToggleVoting = async () => {
+    const newStatus = !votingOpen;
+    const result = await Swal.fire({
+      title: newStatus ? "¿Abrir votaciones?" : "¿Cerrar votaciones?",
+      html: `
+        <div style="text-align: left; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
+          <p style="margin-bottom: 12px;">
+            ${newStatus
+              ? "Las votaciones se abrirán y los usuarios podrán votar nuevamente."
+              : "Las votaciones se cerrarán y los usuarios no podrán votar más. Podrás mostrar los ganadores."}
+          </p>
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: newStatus ? "Sí, abrir" : "Sí, cerrar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#FFD080",
+      cancelButtonColor: "#6c757d",
+      background: "#080808",
+      color: "#ffffff",
+      customClass: {
+        popup: "swal2-popup-custom",
+        title: "swal2-title-custom",
+        htmlContainer: "swal2-html-container-custom",
+        confirmButton: "swal2-confirm-custom",
+        cancelButton: "swal2-cancel-custom",
+      },
+    });
+
+    if (result.isConfirmed) {
+      await setVotingStatus(newStatus);
+      setVotingOpen(newStatus);
+      await Swal.fire({
+        title: newStatus ? "¡Votaciones abiertas!" : "¡Votaciones cerradas!",
+        text: newStatus
+          ? "Los usuarios ahora pueden votar."
+          : "Las votaciones han sido cerradas. Puedes mostrar los ganadores.",
+        icon: "success",
+        confirmButtonColor: "#FFD080",
+        background: "#080808",
+        color: "#ffffff",
+        timer: 2000,
+        timerProgressBar: true,
+      });
+    }
+  };
+
+  const handleShowWinner = (category: Category) => {
+    setSelectedCategoryForWinner({
+      id: category.id,
+      name: category.name,
+      emoji: category.emoji,
+    });
+    setIsSelectWinnerModalOpen(true);
+  };
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-light text-white uppercase tracking-wide">
-          Dashboard
-        </h1>
-        <p className="text-white/60 text-xs sm:text-sm mt-1">
-          Panel de administración de IT Awards 2025
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-light text-white uppercase tracking-wide">
+            Dashboard
+          </h1>
+          <p className="text-white/60 text-xs sm:text-sm mt-1">
+            Panel de administración de IT Awards 2025
+          </p>
+        </div>
+        
+        {/* Botones de control */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            onClick={handleToggleVoting}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
+              votingOpen
+                ? "bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30"
+                : "bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Icon
+                icon={votingOpen ? "mdi:lock" : "mdi:lock-open"}
+                width={18}
+                height={18}
+              />
+              <span>{votingOpen ? "Cerrar Votaciones" : "Abrir Votaciones"}</span>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Métricas principales */}
@@ -459,6 +558,54 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Ganadores por Categoría */}
+      {!votingOpen && categories.length > 0 && (
+        <div className="rounded-2xl bg-black/20 border border-white/10 p-3 sm:p-4 backdrop-blur">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-semibold text-white">
+              Mostrar Ganadores
+            </h2>
+            <span className="text-xs text-white/60 bg-red-500/20 px-2 py-1 rounded border border-red-500/30">
+              Votaciones Cerradas
+            </span>
+          </div>
+          <p className="text-white/60 text-xs sm:text-sm mb-4">
+            Selecciona una categoría para mostrar el ganador en una nueva ventana con confeti
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+            {categories.map((category) => {
+              const categoryNominations = nominationsByCategory[category.id] || [];
+              const hasVotes = categoryNominations.length > 0;
+
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => handleShowWinner(category)}
+                  disabled={!hasVotes}
+                  className={`p-3 rounded-lg border transition text-left ${
+                    hasVotes
+                      ? "bg-white/5 border-white/15 hover:bg-white/10 hover:border-[#FFD080]/30"
+                      : "bg-white/5 border-white/10 opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    {category.emoji && <span className="text-lg">{category.emoji}</span>}
+                    <span className="text-white font-medium text-sm truncate">
+                      {category.name}
+                    </span>
+                  </div>
+                  <p className="text-white/60 text-xs">
+                    {hasVotes
+                      ? `${categoryNominations.length} candidato(s) con votos`
+                      : "Sin votos"}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Top 3 Colaboradores */}
       {topThreeNominated.length > 0 && (
         <div className="rounded-2xl bg-black/20 border border-white/10 p-3 sm:p-4 backdrop-blur">
@@ -561,6 +708,20 @@ export default function Dashboard() {
           </p>
         )}
       </div>
+
+      {/* Modal para seleccionar ganador */}
+      {selectedCategoryForWinner && (
+        <SelectWinnerModal
+          isOpen={isSelectWinnerModalOpen}
+          onClose={() => {
+            setIsSelectWinnerModalOpen(false);
+            setSelectedCategoryForWinner(null);
+          }}
+          categoryId={selectedCategoryForWinner.id}
+          categoryName={selectedCategoryForWinner.name}
+          categoryEmoji={selectedCategoryForWinner.emoji}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import CategoryDetailPage from "./pages/CategoryDetailPage";
 import ParticipantsPage from "./pages/ParticipantsPage";
 import MyVotesPage from "./pages/MyVotesPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import WinnerPage from "./pages/WinnerPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import CategoriesManagement from "./pages/admin/CategoriesManagement";
@@ -38,6 +39,7 @@ function App() {
           <Route index element={<LandingPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="participantes" element={<ParticipantsPage />} />
+          <Route path="ganador" element={<WinnerPage />} />
           <Route
             path="mis-votos"
             element={

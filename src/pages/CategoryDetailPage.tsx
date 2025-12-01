@@ -5,6 +5,7 @@ import Icon from "../components/Icon";
 import CollaboratorCard from "../components/CollaboratorCard";
 import { useNominationsStore } from "../store/useNominationsStore";
 import { supabase } from "../lib/supabase";
+import { getVotingStatus } from "../lib/votingStatus";
 import type { Category, Collaborator } from "../types";
 import "../App.css";
 
@@ -15,6 +16,7 @@ export default function CategoryDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [votingOpen, setVotingOpen] = useState<boolean>(true);
 
   // Cargar categoría
   useEffect(() => {
@@ -196,6 +198,15 @@ export default function CategoryDetailPage() {
   const clearNomination = useNominationsStore((s) => s.clearNomination);
   const syncWithSupabase = useNominationsStore((s) => s.syncWithSupabase);
 
+  // Cargar estado de votaciones
+  useEffect(() => {
+    const loadVotingStatus = async () => {
+      const status = await getVotingStatus();
+      setVotingOpen(status);
+    };
+    loadVotingStatus();
+  }, []);
+
   // Sincronizar nominaciones desde Supabase al cargar
   useEffect(() => {
     const syncNominations = async () => {
@@ -303,7 +314,7 @@ export default function CategoryDetailPage() {
                     Aún no eliges a nadie en esta categoría.
                   </p>
                 )}
-                {hasNomination ? (
+                {hasNomination && votingOpen ? (
                   <button
                     onClick={async () => {
                       const collaboratorName = collaborators.find(
@@ -349,10 +360,26 @@ export default function CategoryDetailPage() {
         </div>
 
         <div className="rounded-3xl bg-black/25 border border-white/10 p-6 md:p-10 backdrop-blur">
+          {!votingOpen && (
+            <div className="mb-6 p-4 rounded-lg bg-red-500/20 border border-red-500/30">
+              <div className="flex items-center gap-2">
+                <Icon
+                  icon="mdi:lock"
+                  className="text-red-400"
+                  width={20}
+                  height={20}
+                />
+                <p className="text-red-400 font-semibold text-sm">
+                  Las votaciones han sido cerradas. Ya no puedes votar.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-white/70 text-xs sm:text-sm mb-5">
             <p className="text-center md:text-left">
-              Elige a tu colaborador favorito; el detalle se guarda solo en tu
-              dispositivo.
+              {votingOpen
+                ? "Elige a tu colaborador favorito; el detalle se guarda solo en tu dispositivo."
+                : "Las votaciones están cerradas. Los resultados finales están disponibles."}
             </p>
             <div className="relative w-full md:w-72">
               <input
@@ -399,8 +426,29 @@ export default function CategoryDetailPage() {
                       key={person.id}
                       collaborator={person}
                       isSelected={isSelected}
-                      disabled={hasNomination}
+                      disabled={hasNomination || !votingOpen}
                       onSelect={async () => {
+                        if (!votingOpen) {
+                          await Swal.fire({
+                            toast: true,
+                            position: "top-end",
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            icon: "warning",
+                            title: "Votaciones cerradas",
+                            text: "Las votaciones han sido cerradas. Ya no puedes votar.",
+                            background: "#080808",
+                            color: "#ffffff",
+                            customClass: {
+                              popup: "swal2-popup-custom swal2-toast",
+                              title: "swal2-title-custom",
+                              htmlContainer: "swal2-html-container-custom",
+                            },
+                          });
+                          return;
+                        }
+
                         await nominate(categoryIdStr, person.id.toString());
                         // Mostrar toast de éxito
                         Swal.fire({
