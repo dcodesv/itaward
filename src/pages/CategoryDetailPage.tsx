@@ -270,7 +270,7 @@ export default function CategoryDetailPage() {
                   <span className="text-xl sm:text-2xl font-semibold">
                     {collaborators.length}
                   </span>{" "}
-                  nominados
+                  candidatos
                 </p>
                 {hasNomination ? (
                   <p className="uppercase text-xs sm:text-sm mt-2 text-[#FFD080]/60 text-center px-2">
