@@ -96,20 +96,26 @@ export default function CategoryDetailPage() {
           .select("collaborator_id");
 
         if (allRelationsError) {
-          console.error("Error al cargar todas las relaciones:", allRelationsError);
+          console.error(
+            "Error al cargar todas las relaciones:",
+            allRelationsError
+          );
           setIsLoadingCollaborators(false);
           return;
         }
 
         // IDs de colaboradores que tienen relaciones específicas con alguna categoría
         const collaboratorsWithSpecificCategories = new Set(
-          allRelations?.map((rel: { collaborator_id: number }) => rel.collaborator_id) || []
+          allRelations?.map(
+            (rel: { collaborator_id: number }) => rel.collaborator_id
+          ) || []
         );
 
         // IDs de colaboradores específicos para esta categoría
-        const specificCollaboratorIds = relations?.map(
-          (rel: { collaborator_id: number }) => rel.collaborator_id
-        ) || [];
+        const specificCollaboratorIds =
+          relations?.map(
+            (rel: { collaborator_id: number }) => rel.collaborator_id
+          ) || [];
 
         // Cargar todos los colaboradores
         const { data: allCollaborators, error: allCollaboratorsError } =
@@ -119,7 +125,10 @@ export default function CategoryDetailPage() {
             .order("full_name", { ascending: true });
 
         if (allCollaboratorsError) {
-          console.error("Error al cargar colaboradores:", allCollaboratorsError);
+          console.error(
+            "Error al cargar colaboradores:",
+            allCollaboratorsError
+          );
           setIsLoadingCollaborators(false);
           return;
         }
@@ -133,11 +142,17 @@ export default function CategoryDetailPage() {
         // Filtrar colaboradores:
         // 1. Los que tienen relación específica con esta categoría
         // 2. Los que NO tienen relaciones con ninguna categoría (pueden ser nominados en todas)
-        const filteredCollaborators = allCollaborators.filter((collab: { id: number }) => {
-          const hasSpecificRelation = specificCollaboratorIds.includes(collab.id);
-          const hasNoRelations = !collaboratorsWithSpecificCategories.has(collab.id);
-          return hasSpecificRelation || hasNoRelations;
-        });
+        const filteredCollaborators = allCollaborators.filter(
+          (collab: { id: number }) => {
+            const hasSpecificRelation = specificCollaboratorIds.includes(
+              collab.id
+            );
+            const hasNoRelations = !collaboratorsWithSpecificCategories.has(
+              collab.id
+            );
+            return hasSpecificRelation || hasNoRelations;
+          }
+        );
 
         const collaboratorsData = filteredCollaborators;
 
