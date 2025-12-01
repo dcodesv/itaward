@@ -16,6 +16,8 @@
     "@iconify/react": "^6.0.2",
     "@supabase/supabase-js": "^2.86.0",
     "@tailwindcss/vite": "^4.1.17",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.4",
     "react": "^19.2.0",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.2.0",
