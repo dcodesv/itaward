@@ -4,9 +4,10 @@ import type { Category } from "../types";
 type Props = {
   category: Category;
   nomineesCount?: number;
+  hasVoted?: boolean;
 };
 
-export default function CategoryCard({ category, nomineesCount = 0 }: Props) {
+export default function CategoryCard({ category, nomineesCount = 0, hasVoted = false }: Props) {
   return (
     <Link
       to={`/categorias/${category.id}`}
@@ -14,6 +15,26 @@ export default function CategoryCard({ category, nomineesCount = 0 }: Props) {
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,208,128,0.25),transparent_60%)] opacity-0 group-hover:opacity-100 transition" />
       <div className="pointer-events-none absolute inset-0 border border-white/5 rounded-3xl" />
+      
+      {/* Indicador de voto */}
+      {hasVoted && (
+        <div className="absolute top-3 right-3 z-20 flex items-center justify-center size-6 sm:size-7 rounded-full bg-[#FFD080]/20 border border-[#FFD080]/50">
+          <svg
+            className="size-3 sm:size-4 text-[#FFD080]"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+      )}
+
       <div className="relative z-10 flex items-start gap-2 sm:gap-3 mb-3">
         {category.emoji && (
           <span className="text-2xl sm:text-3xl shrink-0">{category.emoji}</span>

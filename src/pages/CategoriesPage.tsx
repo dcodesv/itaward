@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import CategoryCard from "../components/CategoryCard";
 import { supabase } from "../lib/supabase";
+import { useAuthStore } from "../store/useAuthStore";
+import { useNominationsStore } from "../store/useNominationsStore";
 import type { Category } from "../types";
 
 export default function CategoriesPage() {
@@ -8,12 +10,22 @@ export default function CategoriesPage() {
   const [nominationsByCategory, setNominationsByCategory] = useState<
     Record<number, number>
   >({});
+  const [userVotedCategories, setUserVotedCategories] = useState<
+    Set<number>
+  >(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const { voterId } = useAuthStore();
+  const { getCurrentUserNominations, syncWithSupabase } = useNominationsStore();
 
   useEffect(() => {
     const loadAllData = async () => {
       try {
         setIsLoading(true);
+
+        // Sincronizar nominaciones del usuario si está logueado
+        if (voterId) {
+          await syncWithSupabase();
+        }
 
         // Cargar categorías
         const { data: categoriesData, error: categoriesError } = await supabase
@@ -75,6 +87,39 @@ export default function CategoriesPage() {
 
           setNominationsByCategory(counts);
         }
+
+        // Cargar nominaciones del usuario logueado directamente desde Supabase
+        if (voterId) {
+          const { data: userNominationsData, error: userNominationsError } = await supabase
+            .from("nominations")
+            .select("category_id")
+            .eq("voter_id", voterId);
+
+          if (!userNominationsError && userNominationsData) {
+            const votedCategories = new Set<number>();
+            userNominationsData.forEach(
+              (nom: { category_id: number }) => {
+                votedCategories.add(nom.category_id);
+              }
+            );
+            setUserVotedCategories(votedCategories);
+          } else {
+            // Fallback al store si hay error
+            const userNominations = getCurrentUserNominations();
+            const votedCategories = new Set<number>();
+            
+            Object.keys(userNominations).forEach((categoryIdStr) => {
+              const categoryId = parseInt(categoryIdStr, 10);
+              if (!isNaN(categoryId) && userNominations[categoryIdStr] !== null) {
+                votedCategories.add(categoryId);
+              }
+            });
+            
+            setUserVotedCategories(votedCategories);
+          }
+        } else {
+          setUserVotedCategories(new Set());
+        }
       } catch (error) {
         console.error("Error inesperado al cargar datos:", error);
       } finally {
@@ -83,7 +128,7 @@ export default function CategoriesPage() {
     };
 
     loadAllData();
-  }, []);
+  }, [voterId, syncWithSupabase, getCurrentUserNominations]);
 
   return (
     <div className="min-h-screen bg-linear-to-l from-[#080808] via-[#101019] to-[#080808] relative overflow-hidden">
@@ -136,6 +181,7 @@ export default function CategoriesPage() {
                   key={c.id}
                   category={c}
                   nomineesCount={nominationsByCategory[c.id] || 0}
+                  hasVoted={userVotedCategories.has(c.id)}
                 />
               ))}
             </div>
