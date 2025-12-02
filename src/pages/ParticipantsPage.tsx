@@ -83,30 +83,64 @@ export default function ParticipantsPage() {
     }
   };
 
-  // Cargar relaciones categoría-colaborador
+  // Cargar relaciones categoría-colaborador (combinando category_collaborators y nominations)
   const loadCategoryRelations = async () => {
     try {
-      const { data, error } = await supabase
-        .from("category_collaborators")
+      // Cargar relaciones de category_collaborators
+      const { data: categoryRelationsData, error: relationsError } =
+        await supabase
+          .from("category_collaborators")
+          .select("category_id, collaborator_id");
+
+      if (relationsError) {
+        console.error("Error al cargar relaciones:", relationsError);
+      }
+
+      // Cargar nominaciones reales
+      const { data: nominationsData, error: nominationsError } = await supabase
+        .from("nominations")
         .select("category_id, collaborator_id");
 
-      if (error) {
-        console.error("Error al cargar relaciones:", error);
-        return;
+      if (nominationsError) {
+        console.error("Error al cargar nominaciones:", nominationsError);
       }
 
-      if (data && Array.isArray(data)) {
-        const relations: Record<number, number[]> = {};
-        data.forEach(
+      // Combinar ambas fuentes de datos
+      const relations: Record<number, Set<number>> = {};
+
+      // Agregar relaciones de category_collaborators
+      if (categoryRelationsData && Array.isArray(categoryRelationsData)) {
+        categoryRelationsData.forEach(
           (rel: { category_id: number; collaborator_id: number }) => {
             if (!relations[rel.collaborator_id]) {
-              relations[rel.collaborator_id] = [];
+              relations[rel.collaborator_id] = new Set();
             }
-            relations[rel.collaborator_id].push(rel.category_id);
+            relations[rel.collaborator_id].add(rel.category_id);
           }
         );
-        setCategoryRelations(relations);
       }
+
+      // Agregar categorías de nominaciones reales
+      if (nominationsData && Array.isArray(nominationsData)) {
+        nominationsData.forEach(
+          (nom: { category_id: number; collaborator_id: number }) => {
+            if (!relations[nom.collaborator_id]) {
+              relations[nom.collaborator_id] = new Set();
+            }
+            relations[nom.collaborator_id].add(nom.category_id);
+          }
+        );
+      }
+
+      // Convertir Sets a Arrays
+      const relationsArray: Record<number, number[]> = {};
+      Object.keys(relations).forEach((collabId) => {
+        relationsArray[parseInt(collabId, 10)] = Array.from(
+          relations[parseInt(collabId, 10)]
+        );
+      });
+
+      setCategoryRelations(relationsArray);
     } catch (error) {
       console.error("Error inesperado al cargar relaciones:", error);
     }
@@ -260,9 +294,11 @@ export default function ParticipantsPage() {
                             "https://via.placeholder.com/150?text=No+Image";
                         }}
                       />
-                      <div className="absolute -bottom-2 -right-2 flex items-center justify-center size-8 rounded-full bg-[#FFD080]/20 text-[#FFD080] text-xs font-semibold border border-[#FFD080]/30">
-                        {participant.categories.length}
-                      </div>
+                      {participant.categories.length > 0 && (
+                        <div className="absolute -bottom-2 -right-2 flex items-center justify-center size-8 rounded-full bg-[#FFD080]/20 text-[#FFD080] text-xs font-semibold border border-[#FFD080]/30">
+                          {participant.categories.length}
+                        </div>
+                      )}
                     </div>
                     <div className="w-full">
                       <h3 className="text-white font-semibold text-base sm:text-lg mb-1">
@@ -273,9 +309,9 @@ export default function ParticipantsPage() {
                           {participant.role}
                         </p>
                       )}
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {participant.categories.length > 0 ? (
-                          participant.categories.map((categoryId) => {
+                      {participant.categories.length > 0 && (
+                        <div className="flex flex-wrap gap-2 justify-center">
+                          {participant.categories.map((categoryId) => {
                             const category = getCategoryDetails(categoryId);
                             return category ? (
                               <span
@@ -288,13 +324,9 @@ export default function ParticipantsPage() {
                                 <span>{category.name}</span>
                               </span>
                             ) : null;
-                          })
-                        ) : (
-                          <span className="text-white/40 text-xs">
-                            Sin categorías
-                          </span>
-                        )}
-                      </div>
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
