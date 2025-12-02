@@ -218,11 +218,14 @@ export default function NominationsManagement() {
             item !== null
         );
 
+      // Contar colaboradores únicos nominados en esta categoría
+      const uniqueNominees = categoryNominations.length;
+
       return {
         category,
         nominations: nominationsWithCollaborators,
         totalVotes,
-        totalNominees: categoryRelations[category.id]?.length ?? 0,
+        totalNominees: uniqueNominees,
       };
     });
   }, [nominationsByCategory, categories, collaborators, categoryRelations]);
