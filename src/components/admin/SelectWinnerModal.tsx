@@ -230,7 +230,7 @@ export default function SelectWinnerModal({
                 justify-content: center;
               }
               .logo-container {
-                margin-bottom: 30px;
+                margin-bottom: 20px;
                 position: relative;
               }
               .logo {
@@ -240,7 +240,7 @@ export default function SelectWinnerModal({
               }
               .category {
                 text-align: center;
-                margin-bottom: 25px;
+                margin-bottom: 20px;
                 position: relative;
               }
               .category-text {
@@ -262,14 +262,47 @@ export default function SelectWinnerModal({
                 margin: 0 auto;
                 box-shadow: 0 2px 8px rgba(255, 208, 128, 0.4);
               }
+              .winner-photo-container {
+                margin-bottom: 20px;
+                margin-top: 5px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                position: relative;
+              }
+              .winner-photo-wrapper {
+                position: relative;
+                display: inline-block;
+              }
+              .winner-photo-glow {
+                position: absolute;
+                inset: -10px;
+                background: rgba(255, 208, 128, 0.3);
+                border-radius: 50%;
+                filter: blur(20px);
+                opacity: 0.6;
+                z-index: 1;
+              }
+              .winner-photo {
+                position: relative;
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 4px solid #FFD080;
+                box-shadow: 0 8px 32px rgba(255, 208, 128, 0.4);
+                z-index: 2;
+                background: rgba(255, 255, 255, 0.1);
+                display: block;
+              }
               .winner-name {
-                font-size: 64px;
+                font-size: 56px;
                 font-weight: bold;
                 text-transform: uppercase;
                 text-align: center;
                 color: #ffffff;
-                margin-bottom: 15px;
-                letter-spacing: 3px;
+                margin-bottom: 12px;
+                letter-spacing: 2px;
                 text-shadow: 0 4px 20px rgba(255, 208, 128, 0.3);
                 line-height: 1.2;
               }
@@ -458,6 +491,17 @@ export default function SelectWinnerModal({
                 </div>
                 <div class="divider"></div>
               </div>
+              <div class="winner-photo-container">
+                <div class="winner-photo-wrapper">
+                  <div class="winner-photo-glow"></div>
+                  <img 
+                    src="${selectedCandidate.collaborator.avatarUrl}" 
+                    alt="${selectedCandidate.collaborator.fullName}" 
+                    class="winner-photo"
+                    onerror="this.onerror=null; this.src='https://via.placeholder.com/300?text=No+Image';"
+                  />
+                </div>
+              </div>
               <h1 class="winner-name">${
                 selectedCandidate.collaborator.fullName
               }</h1>
@@ -501,21 +545,37 @@ export default function SelectWinnerModal({
       iframeDoc.write(htmlContent);
       iframeDoc.close();
 
-      // Esperar a que se cargue el logo
-      await new Promise((resolve) => {
-        const logoImg = iframeDoc.querySelector(".logo") as HTMLImageElement;
-        if (logoImg) {
-          if (logoImg.complete) {
-            resolve(null);
+      // Esperar a que se carguen todas las imágenes (logo y foto del ganador)
+      await Promise.all([
+        new Promise((resolve) => {
+          const logoImg = iframeDoc.querySelector(".logo") as HTMLImageElement;
+          if (logoImg) {
+            if (logoImg.complete) {
+              resolve(null);
+            } else {
+              logoImg.onload = () => resolve(null);
+              logoImg.onerror = () => resolve(null);
+              setTimeout(() => resolve(null), 2000);
+            }
           } else {
-            logoImg.onload = () => resolve(null);
-            logoImg.onerror = () => resolve(null);
-            setTimeout(() => resolve(null), 2000);
+            setTimeout(() => resolve(null), 500);
           }
-        } else {
-          setTimeout(() => resolve(null), 500);
-        }
-      });
+        }),
+        new Promise((resolve) => {
+          const winnerPhoto = iframeDoc.querySelector(".winner-photo") as HTMLImageElement;
+          if (winnerPhoto) {
+            if (winnerPhoto.complete) {
+              resolve(null);
+            } else {
+              winnerPhoto.onload = () => resolve(null);
+              winnerPhoto.onerror = () => resolve(null);
+              setTimeout(() => resolve(null), 3000);
+            }
+          } else {
+            setTimeout(() => resolve(null), 500);
+          }
+        }),
+      ]);
 
       // Usar html2canvas para capturar el iframe
       const canvas = await html2canvas(iframeDoc.body, {
