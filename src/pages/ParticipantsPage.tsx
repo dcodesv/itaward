@@ -294,11 +294,12 @@ export default function ParticipantsPage() {
                             "https://via.placeholder.com/150?text=No+Image";
                         }}
                       />
-                      {participant.categories.length > 0 && (
+                      {/* Temporarily hidden: Category counter badge */}
+                      {/* {participant.categories.length > 0 && (
                         <div className="absolute -bottom-2 -right-2 flex items-center justify-center size-8 rounded-full bg-[#FFD080]/20 text-[#FFD080] text-xs font-semibold border border-[#FFD080]/30">
                           {participant.categories.length}
                         </div>
-                      )}
+                      )} */}
                     </div>
                     <div className="w-full">
                       <h3 className="text-white font-semibold text-base sm:text-lg mb-1">
@@ -309,7 +310,8 @@ export default function ParticipantsPage() {
                           {participant.role}
                         </p>
                       )}
-                      {participant.categories.length > 0 && (
+                      {/* Temporarily hidden: Nominated categories badges */}
+                      {/* {participant.categories.length > 0 && (
                         <div className="flex flex-wrap gap-2 justify-center">
                           {participant.categories.map((categoryId) => {
                             const category = getCategoryDetails(categoryId);
@@ -326,7 +328,7 @@ export default function ParticipantsPage() {
                             ) : null;
                           })}
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>
