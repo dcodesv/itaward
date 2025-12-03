@@ -278,18 +278,21 @@ export default function LotteryDisplayPage() {
           className="absolute bottom-24 left-32 w-16 h-16 rounded-full bg-white/25 shadow-lg"
           style={{
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            filter: "blur(8px)",
           }}
         />
         <div
           className="absolute bottom-20 left-16 w-12 h-12 rounded-full bg-white/20 shadow-lg"
           style={{
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            filter: "blur(6px)",
           }}
         />
         <div
           className="absolute bottom-24 right-32 w-16 h-16 rounded-full bg-white/25 shadow-lg"
           style={{
             boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+            filter: "blur(8px)",
           }}
         />
 
@@ -299,6 +302,7 @@ export default function LotteryDisplayPage() {
           style={{
             boxShadow: "0 0 20px rgba(255, 255, 255, 0.1)",
             animation: "float 6s ease-in-out infinite",
+            filter: "blur(10px)",
           }}
         />
         <div
@@ -307,6 +311,7 @@ export default function LotteryDisplayPage() {
             boxShadow: "0 0 20px rgba(255, 255, 255, 0.1)",
             animation: "float 8s ease-in-out infinite",
             animationDelay: "1s",
+            filter: "blur(8px)",
           }}
         />
         <div
@@ -315,6 +320,7 @@ export default function LotteryDisplayPage() {
             boxShadow: "0 0 20px rgba(255, 255, 255, 0.1)",
             animation: "float 7s ease-in-out infinite",
             animationDelay: "2s",
+            filter: "blur(9px)",
           }}
         />
       </div>
