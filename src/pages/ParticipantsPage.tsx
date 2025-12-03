@@ -35,11 +35,15 @@ export default function ParticipantsPage() {
             full_name: string;
             avatar_url: string;
             role: string | null;
+            lottery_name: string | null;
+            lottery_shout: string | null;
           }) => ({
             id: collab.id,
             fullName: collab.full_name,
             avatarUrl: collab.avatar_url,
             role: collab.role || undefined,
+            lotteryName: collab.lottery_name || undefined,
+            lotteryShout: collab.lottery_shout || undefined,
           })
         );
         setCollaborators(mappedCollaborators);

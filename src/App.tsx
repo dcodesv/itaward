@@ -17,6 +17,7 @@ import PeopleManagement from "./pages/admin/PeopleManagement";
 import NominationsManagement from "./pages/admin/NominationsManagement";
 import UsersManagement from "./pages/admin/UsersManagement";
 import Statistics from "./pages/admin/Statistics";
+import LotteryManagement from "./pages/admin/LotteryManagement";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="nominaciones" element={<NominationsManagement />} />
           <Route path="usuarios" element={<UsersManagement />} />
           <Route path="estadisticas" element={<Statistics />} />
+          <Route path="loteria" element={<LotteryManagement />} />
           {/* Ruta 404 para admin */}
           <Route path="*" element={<NotFoundPage />} />
         </Route>

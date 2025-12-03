@@ -10,6 +10,8 @@ export type Collaborator = {
   fullName: string;
   avatarUrl: string;
   role?: string;
+  lotteryName?: string;
+  lotteryShout?: string;
 };
 
 export type CategoryIdToCollaborators = Record<number, Collaborator[]>;

@@ -144,6 +144,21 @@ export default function AdminLayout() {
               <Icon icon="mdi:chart-line" className="text-sm" />
               <span className="text-sm font-medium">Estadísticas</span>
             </NavLink>
+
+            <NavLink
+              to="/admin/loteria"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm ${
+                  isActive
+                    ? "bg-[#FFD080]/20 text-[#FFD080] border border-[#FFD080]/30"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
+                }`
+              }
+            >
+              <Icon icon="mdi:ticket" className="text-sm" />
+              <span className="text-sm font-medium">Lotería</span>
+            </NavLink>
           </nav>
 
           <div className="p-2 border-t border-white/10">
