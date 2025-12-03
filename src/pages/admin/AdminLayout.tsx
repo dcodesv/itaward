@@ -159,6 +159,18 @@ export default function AdminLayout() {
               <Icon icon="mdi:ticket" className="text-sm" />
               <span className="text-sm font-medium">Lotería</span>
             </NavLink>
+
+            <Link
+              to="/loteria-display"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={closeSidebar}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg transition text-sm text-white/70 hover:text-white hover:bg-white/5 border border-white/10 hover:border-[#FFD080]/30"
+            >
+              <Icon icon="mdi:projector-screen" className="text-sm" />
+              <span className="text-sm font-medium">Ver Proyector</span>
+              <Icon icon="mdi:open-in-new" className="text-xs ml-auto" />
+            </Link>
           </nav>
 
           <div className="p-2 border-t border-white/10">

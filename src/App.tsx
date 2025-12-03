@@ -18,6 +18,7 @@ import NominationsManagement from "./pages/admin/NominationsManagement";
 import UsersManagement from "./pages/admin/UsersManagement";
 import Statistics from "./pages/admin/Statistics";
 import LotteryManagement from "./pages/admin/LotteryManagement";
+import LotteryDisplayPage from "./pages/LotteryDisplayPage";
 
 function App() {
   return (
@@ -38,6 +39,9 @@ function App() {
 
         {/* Página de ganador - Sin TopNav ni Snowfall */}
         <Route path="ganador" element={<WinnerPage />} />
+
+        {/* Página de lotería - Sin TopNav, con Snowfall interno */}
+        <Route path="loteria-display" element={<LotteryDisplayPage />} />
 
         {/* Public Routes - Con TopNav y Snowfall */}
         <Route path="/" element={<PublicLayout />}>
