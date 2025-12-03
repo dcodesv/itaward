@@ -22,6 +22,7 @@ export default function LotteryDisplayPage() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
   const [showMystery, setShowMystery] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   // Cargar colaboradores con datos de lotería
   useEffect(() => {
@@ -59,15 +60,8 @@ export default function LotteryDisplayPage() {
           );
 
           setCollaborators(mappedCollaborators);
-
-          // Seleccionar el primer colaborador al azar
-          if (mappedCollaborators.length > 0) {
-            const randomIndex = Math.floor(
-              Math.random() * mappedCollaborators.length
-            );
-            setCurrentCollaborator(mappedCollaborators[randomIndex]);
-            setUsedIndices(new Set([randomIndex]));
-          }
+          // No seleccionar el primer colaborador automáticamente
+          // Se seleccionará cuando el usuario presione una tecla o el botón
         }
       } catch (error) {
         console.error("Error inesperado al cargar colaboradores:", error);
@@ -115,6 +109,17 @@ export default function LotteryDisplayPage() {
   const handleNext = useCallback(() => {
     if (isAnimating || collaborators.length === 0) return;
 
+    // Si no ha comenzado, iniciar el juego
+    if (!hasStarted) {
+      setHasStarted(true);
+      const firstCollaborator = getRandomCollaborator();
+      if (firstCollaborator) {
+        setCurrentCollaborator(firstCollaborator);
+        setShowMystery(true);
+      }
+      return;
+    }
+
     // Si está en modo misterio, revelar primero
     if (showMystery) {
       handleReveal();
@@ -142,6 +147,7 @@ export default function LotteryDisplayPage() {
     getRandomCollaborator,
     showMystery,
     handleReveal,
+    hasStarted,
   ]);
 
   // Navegación con teclado
@@ -201,6 +207,71 @@ export default function LotteryDisplayPage() {
           >
             No hay colaboradores con nombres de lotería configurados
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Pantalla de bienvenida antes de comenzar
+  if (!hasStarted && !isLoading && collaborators.length > 0) {
+    return (
+      <div
+        className="h-screen w-screen relative overflow-hidden flex items-center justify-center"
+        style={{
+          background: "#5a1d1d",
+          backgroundImage:
+            "radial-gradient(ellipse at center, rgba(127, 46, 42, 0.85) 0%, rgba(90, 29, 28, 1) 100%)",
+        }}
+      >
+        {/* Efecto de viñeta sutil */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            boxShadow: "inset 0 0 200px rgba(0, 0, 0, 0.3)",
+          }}
+        />
+
+        <Snowfall />
+
+        {/* Contenido de bienvenida */}
+        <div className="relative z-10 text-center px-8">
+          <h1
+            className="text-5xl md:text-6xl lg:text-7xl font-normal mb-8 tracking-wide"
+            style={{
+              fontFamily:
+                "'Cormorant Garamond', 'Playfair Display', 'Georgia', serif",
+              color: "#D4AF37",
+              fontWeight: 400,
+              letterSpacing: "0.1em",
+            }}
+          >
+            ¡Listos para Iniciar!
+          </h1>
+          <p
+            className="text-xl md:text-2xl text-white/80 font-light mb-12"
+            style={{
+              fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+              letterSpacing: "0.05em",
+            }}
+          >
+            Presiona una tecla o el botón para comenzar
+          </p>
+
+          {/* Botón para comenzar */}
+          <button
+            onClick={handleNext}
+            className="px-10 py-4 text-white/90 text-base uppercase tracking-[0.15em] transition-all flex items-center gap-3 mx-auto hover:text-[#D4AF37]"
+            style={{
+              fontFamily: "'Source Sans Pro', sans-serif",
+              fontWeight: 300,
+              borderBottom: "1px solid rgba(212, 175, 55, 0.4)",
+              borderRadius: 0,
+              background: "transparent",
+            }}
+          >
+            <span>Comenzar</span>
+            <Icon icon="mdi:arrow-right" width={20} height={20} />
+          </button>
         </div>
       </div>
     );
@@ -346,7 +417,7 @@ export default function LotteryDisplayPage() {
       </div>
 
       {/* Contenido principal */}
-      <div className="relative z-10 w-full max-w-4xl h-full flex flex-col items-center justify-center px-8 py-2 -mt-24">
+      <div className="relative z-10 w-full max-w-4xl h-full flex flex-col items-center justify-center px-8 py-2 -mt-20">
         <div
           className={`w-full text-center transition-all duration-500 flex flex-col items-center justify-center ${
             isAnimating
