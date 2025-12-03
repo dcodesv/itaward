@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import type { Collaborator } from "../types";
 import Snowfall from "../components/Snowfall";
 import Icon from "../components/Icon";
+import gorroNavideno from "../assets/gorro-navideno.png";
 
 type CollaboratorWithLottery = Omit<
   Collaborator,
@@ -544,6 +545,18 @@ export default function LotteryDisplayPage() {
                       "https://via.placeholder.com/300?text=No+Image";
                   }}
                 />
+                {/* Gorrito navideño - solo visible cuando la foto es visible */}
+                {!showMystery && (
+                  <img
+                    src={gorroNavideno}
+                    alt="Gorrito navideño"
+                    className="absolute right-[-30px] rotate-[20deg] w-20 md:w-32 z-20 top-[-40px]"
+                    style={{
+                      animation: "fade-in 0.5s ease-in-out",
+                      filter: "drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))",
+                    }}
+                  />
+                )}
                 {/* Signo de interrogación cuando está en modo misterio */}
                 {showMystery && (
                   <div
