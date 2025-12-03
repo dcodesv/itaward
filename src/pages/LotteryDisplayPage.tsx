@@ -21,6 +21,7 @@ export default function LotteryDisplayPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
+  const [showMystery, setShowMystery] = useState(false);
 
   // Cargar colaboradores con datos de lotería
   useEffect(() => {
@@ -105,10 +106,23 @@ export default function LotteryDisplayPage() {
     return collaborators[randomIndex];
   }, [collaborators, usedIndices]);
 
+  const handleReveal = useCallback(() => {
+    if (showMystery) {
+      setShowMystery(false);
+    }
+  }, [showMystery]);
+
   const handleNext = useCallback(() => {
     if (isAnimating || collaborators.length === 0) return;
 
+    // Si está en modo misterio, revelar primero
+    if (showMystery) {
+      handleReveal();
+      return;
+    }
+
     setIsAnimating(true);
+    setShowMystery(true);
 
     // Animación de salida
     setTimeout(() => {
@@ -117,12 +131,18 @@ export default function LotteryDisplayPage() {
         setCurrentCollaborator(next);
       }
 
-      // Animación de entrada
+      // Mostrar modo misterio
       setTimeout(() => {
         setIsAnimating(false);
       }, 100);
     }, 300);
-  }, [isAnimating, collaborators.length, getRandomCollaborator]);
+  }, [
+    isAnimating,
+    collaborators.length,
+    getRandomCollaborator,
+    showMystery,
+    handleReveal,
+  ]);
 
   // Navegación con teclado
   useEffect(() => {
@@ -337,97 +357,99 @@ export default function LotteryDisplayPage() {
           {/* Avatar elegante */}
           <div className="mb-8 flex justify-center">
             <div className="relative">
-              {/* Efecto de flashes detrás de la foto - múltiples cámaras */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Flash 1 - Izquierda arriba */}
-                <div
-                  className="absolute w-32 h-32 md:w-56 md:h-56 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 20%, rgba(212, 175, 55, 0.7) 40%, transparent 70%)",
-                    filter: "blur(35px)",
-                    animation: "cameraFlash1 5.5s ease-in-out infinite",
-                    transform: "translate(-40%, -30%)",
-                  }}
-                />
-                {/* Flash 2 - Derecha arriba */}
-                <div
-                  className="absolute w-28 h-28 md:w-52 md:h-52 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.85) 25%, rgba(212, 175, 55, 0.65) 45%, transparent 75%)",
-                    filter: "blur(33px)",
-                    animation: "cameraFlash2 6s ease-in-out infinite",
-                    transform: "translate(35%, -25%)",
-                  }}
-                />
-                {/* Flash 3 - Izquierda abajo */}
-                <div
-                  className="absolute w-30 h-30 md:w-54 md:h-54 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 22%, rgba(212, 175, 55, 0.6) 42%, transparent 72%)",
-                    filter: "blur(34px)",
-                    animation: "cameraFlash3 5.8s ease-in-out infinite",
-                    transform: "translate(-35%, 30%)",
-                  }}
-                />
-                {/* Flash 4 - Derecha abajo */}
-                <div
-                  className="absolute w-26 h-26 md:w-50 md:h-50 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.88) 23%, rgba(212, 175, 55, 0.68) 43%, transparent 73%)",
-                    filter: "blur(32px)",
-                    animation: "cameraFlash4 6.2s ease-in-out infinite",
-                    transform: "translate(30%, 28%)",
-                  }}
-                />
-                {/* Flash 5 - Centro izquierda */}
-                <div
-                  className="absolute w-24 h-24 md:w-48 md:h-48 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 24%, rgba(212, 175, 55, 0.55) 44%, transparent 74%)",
-                    filter: "blur(31px)",
-                    animation: "cameraFlash5 5.6s ease-in-out infinite",
-                    transform: "translate(-45%, 5%)",
-                  }}
-                />
-                {/* Flash 6 - Centro derecha */}
-                <div
-                  className="absolute w-22 h-22 md:w-46 md:h-46 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.78) 26%, rgba(212, 175, 55, 0.58) 46%, transparent 76%)",
-                    filter: "blur(30px)",
-                    animation: "cameraFlash6 6.4s ease-in-out infinite",
-                    transform: "translate(42%, -5%)",
-                  }}
-                />
-                {/* Flash 7 - Arriba centro */}
-                <div
-                  className="absolute w-20 h-20 md:w-44 md:h-44 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.72) 28%, rgba(212, 175, 55, 0.52) 48%, transparent 78%)",
-                    filter: "blur(29px)",
-                    animation: "cameraFlash7 5.9s ease-in-out infinite",
-                    transform: "translate(-5%, -40%)",
-                  }}
-                />
-                {/* Flash 8 - Abajo centro */}
-                <div
-                  className="absolute w-18 h-18 md:w-42 md:h-42 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.7) 30%, rgba(212, 175, 55, 0.5) 50%, transparent 80%)",
-                    filter: "blur(28px)",
-                    animation: "cameraFlash8 6.1s ease-in-out infinite",
-                    transform: "translate(8%, 38%)",
-                  }}
-                />
-              </div>
+              {/* Efecto de flashes detrás de la foto - múltiples cámaras - solo cuando la foto es visible */}
+              {!showMystery && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {/* Flash 1 - Izquierda arriba */}
+                  <div
+                    className="absolute w-32 h-32 md:w-56 md:h-56 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 20%, rgba(212, 175, 55, 0.7) 40%, transparent 70%)",
+                      filter: "blur(35px)",
+                      animation: "cameraFlash1 5.5s ease-in-out infinite",
+                      transform: "translate(-40%, -30%)",
+                    }}
+                  />
+                  {/* Flash 2 - Derecha arriba */}
+                  <div
+                    className="absolute w-28 h-28 md:w-52 md:h-52 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.85) 25%, rgba(212, 175, 55, 0.65) 45%, transparent 75%)",
+                      filter: "blur(33px)",
+                      animation: "cameraFlash2 6s ease-in-out infinite",
+                      transform: "translate(35%, -25%)",
+                    }}
+                  />
+                  {/* Flash 3 - Izquierda abajo */}
+                  <div
+                    className="absolute w-30 h-30 md:w-54 md:h-54 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 22%, rgba(212, 175, 55, 0.6) 42%, transparent 72%)",
+                      filter: "blur(34px)",
+                      animation: "cameraFlash3 5.8s ease-in-out infinite",
+                      transform: "translate(-35%, 30%)",
+                    }}
+                  />
+                  {/* Flash 4 - Derecha abajo */}
+                  <div
+                    className="absolute w-26 h-26 md:w-50 md:h-50 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.88) 23%, rgba(212, 175, 55, 0.68) 43%, transparent 73%)",
+                      filter: "blur(32px)",
+                      animation: "cameraFlash4 6.2s ease-in-out infinite",
+                      transform: "translate(30%, 28%)",
+                    }}
+                  />
+                  {/* Flash 5 - Centro izquierda */}
+                  <div
+                    className="absolute w-24 h-24 md:w-48 md:h-48 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 24%, rgba(212, 175, 55, 0.55) 44%, transparent 74%)",
+                      filter: "blur(31px)",
+                      animation: "cameraFlash5 5.6s ease-in-out infinite",
+                      transform: "translate(-45%, 5%)",
+                    }}
+                  />
+                  {/* Flash 6 - Centro derecha */}
+                  <div
+                    className="absolute w-22 h-22 md:w-46 md:h-46 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.78) 26%, rgba(212, 175, 55, 0.58) 46%, transparent 76%)",
+                      filter: "blur(30px)",
+                      animation: "cameraFlash6 6.4s ease-in-out infinite",
+                      transform: "translate(42%, -5%)",
+                    }}
+                  />
+                  {/* Flash 7 - Arriba centro */}
+                  <div
+                    className="absolute w-20 h-20 md:w-44 md:h-44 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.72) 28%, rgba(212, 175, 55, 0.52) 48%, transparent 78%)",
+                      filter: "blur(29px)",
+                      animation: "cameraFlash7 5.9s ease-in-out infinite",
+                      transform: "translate(-5%, -40%)",
+                    }}
+                  />
+                  {/* Flash 8 - Abajo centro */}
+                  <div
+                    className="absolute w-18 h-18 md:w-42 md:h-42 rounded-full"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.7) 30%, rgba(212, 175, 55, 0.5) 50%, transparent 80%)",
+                      filter: "blur(28px)",
+                      animation: "cameraFlash8 6.1s ease-in-out infinite",
+                      transform: "translate(8%, 38%)",
+                    }}
+                  />
+                </div>
+              )}
               <div
                 className="absolute inset-0 rounded-full"
                 style={{
@@ -436,37 +458,50 @@ export default function LotteryDisplayPage() {
                   filter: "blur(20px)",
                 }}
               />
-              <img
-                src={currentCollaborator.avatarUrl}
-                alt={currentCollaborator.fullName}
-                className="relative size-32 md:size-44 rounded-full object-cover block border-2 border-[#D4AF37]/50 z-10"
-                style={{
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
-                }}
-                onError={(e) => {
-                  e.currentTarget.src =
-                    "https://via.placeholder.com/300?text=No+Image";
-                }}
-              />
+              <div className="relative z-10">
+                <img
+                  src={currentCollaborator.avatarUrl}
+                  alt={currentCollaborator.fullName}
+                  className="size-32 md:size-44 rounded-full object-cover block border-2 border-[#D4AF37]/50"
+                  style={{
+                    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+                    filter: showMystery ? "brightness(0.2) blur(8px)" : "none",
+                    transition: "filter 0.5s ease-in-out",
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      "https://via.placeholder.com/300?text=No+Image";
+                  }}
+                />
+                {/* Signo de interrogación cuando está en modo misterio */}
+                {showMystery && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{
+                      animation: "fade-in 0.3s ease-in-out",
+                    }}
+                  >
+                    <span
+                      className="text-6xl md:text-8xl font-bold"
+                      style={{
+                        fontFamily: "'Cormorant Garamond', serif",
+                        color: "#5a1d1d",
+                        textShadow:
+                          "0 0 20px rgba(90, 29, 28, 0.8), 0 0 40px rgba(90, 29, 28, 0.6)",
+                        filter: "drop-shadow(0 0 15px rgba(90, 29, 28, 0.5))",
+                      }}
+                    >
+                      ?
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Nombre de lotería - tipografía elegante */}
-          <h1
-            className="text-4xl md:text-4xl font-normal mb-2 tracking-wide"
-            style={{
-              fontFamily:
-                "'Cormorant Garamond', 'Playfair Display', 'Georgia', serif",
-              color: "#D4AF37",
-              fontWeight: 400,
-            }}
-          >
-            {currentCollaborator.lotteryName}
-          </h1>
-
-          {/* Grito de lotería - estilo minimalista */}
+          {/* Grito de lotería - estilo minimalista - siempre visible */}
           {currentCollaborator.lotteryShout && (
-            <div className="mt-2 px-6 max-w-2xl mx-auto">
+            <div className="mb-2 px-6 max-w-2xl mx-auto">
               <p
                 className="text-lg md:text-2xl text-white/80 font-light leading-tight"
                 style={{
@@ -480,31 +515,51 @@ export default function LotteryDisplayPage() {
             </div>
           )}
 
-          {/* Nombre real - discreto */}
-          <div className="mt-6">
-            <p
-              className="text-white/70 text-sm md:text-base uppercase tracking-[0.2em]"
+          {/* Nombre de lotería - tipografía elegante - solo visible cuando la foto es visible */}
+          {!showMystery && (
+            <h1
+              className="text-4xl md:text-4xl font-normal mt-2 tracking-wide"
               style={{
-                fontFamily: "'Source Sans Pro', sans-serif",
-                letterSpacing: "0.2em",
-                fontWeight: 300,
+                fontFamily:
+                  "'Cormorant Garamond', 'Playfair Display', 'Georgia', serif",
+                color: "#D4AF37",
+                fontWeight: 400,
+                animation: "fade-in 0.5s ease-in-out",
               }}
             >
-              {currentCollaborator.fullName}
-            </p>
-            {currentCollaborator.role && (
+              {currentCollaborator.lotteryName}
+            </h1>
+          )}
+
+          {/* Nombre real - discreto - solo visible cuando se revela */}
+          {!showMystery && (
+            <div className="mt-6">
               <p
-                className="text-white/50 text-xs md:text-sm tracking-wider"
+                className="text-white/70 text-sm md:text-base uppercase tracking-[0.2em]"
                 style={{
                   fontFamily: "'Source Sans Pro', sans-serif",
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.2em",
                   fontWeight: 300,
+                  animation: "fade-in 0.5s ease-in-out",
                 }}
               >
-                {currentCollaborator.role}
+                {currentCollaborator.fullName}
               </p>
-            )}
-          </div>
+              {currentCollaborator.role && (
+                <p
+                  className="text-white/50 text-xs md:text-sm tracking-wider"
+                  style={{
+                    fontFamily: "'Source Sans Pro', sans-serif",
+                    letterSpacing: "0.1em",
+                    fontWeight: 300,
+                    animation: "fade-in 0.5s ease-in-out",
+                  }}
+                >
+                  {currentCollaborator.role}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
