@@ -24,6 +24,7 @@ export default function LotteryDisplayPage() {
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
   const [showMystery, setShowMystery] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const emojiOpacity = 0.2;
 
   // Cargar colaboradores con datos de lotería
   useEffect(() => {
@@ -415,6 +416,435 @@ export default function LotteryDisplayPage() {
             filter: "blur(9px)",
           }}
         />
+
+        {/* Decoraciones navideñas con emojis - distribuidas por toda la pantalla */}
+        {/* Estrellas - distribución completa */}
+        <div
+          className="absolute top-6 left-0 text-xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8s ease-in-out infinite",
+          }}
+        >
+          ⭐
+        </div>
+        <div
+          className="absolute top-6 right-0 text-2xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7s ease-in-out infinite",
+            animationDelay: "1s",
+          }}
+        >
+          ⭐
+        </div>
+
+        <div
+          className="absolute top-75 left-40 text-4xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.5s ease-in-out infinite",
+            animationDelay: "1.5s",
+          }}
+        >
+          ⭐
+        </div>
+        <div
+          className="absolute top-75 right-40 text-2xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7.5s ease-in-out infinite",
+            animationDelay: "2.5s",
+          }}
+        >
+          ⭐
+        </div>
+        <div
+          className="absolute bottom-50 left-20 text-3xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9.5s ease-in-out infinite",
+            animationDelay: "0.8s",
+          }}
+        >
+          ⭐
+        </div>
+        <div
+          className="absolute bottom-50 right-20 text-3xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8s ease-in-out infinite",
+            animationDelay: "1.8s",
+          }}
+        >
+          ⭐
+        </div>
+        <div
+          className="absolute bottom-0 left-0 text-3xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.5s ease-in-out infinite",
+            animationDelay: "0.3s",
+          }}
+        >
+          ⭐
+        </div>
+        <div
+          className="absolute bottom-0 right-0 text-3xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7.8s ease-in-out infinite",
+            animationDelay: "2.2s",
+          }}
+        >
+          ⭐
+        </div>
+
+        {/* Campanas - distribución completa */}
+        <div
+          className="absolute top-10 right-20 text-2xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7.5s ease-in-out infinite",
+            animationDelay: "1.5s",
+          }}
+        >
+          🔔
+        </div>
+        <div
+          className="absolute top-10 left-20 text-4xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.5s ease-in-out infinite",
+            animationDelay: "2.5s",
+          }}
+        >
+          🔔
+        </div>
+        <div
+          className="absolute top-60 right-10 text-xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 6s ease-in-out infinite",
+            animationDelay: "0.8s",
+          }}
+        >
+          🔔
+        </div>
+        <div
+          className="absolute top-60 left-10 text-3xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7.8s ease-in-out infinite",
+            animationDelay: "1.2s",
+          }}
+        >
+          🔔
+        </div>
+        <div
+          className="absolute bottom-10 right-20 text-3xl md:text-5xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.2s ease-in-out infinite",
+            animationDelay: "2.2s",
+          }}
+        >
+          🔔
+        </div>
+        <div
+          className="absolute bottom-20 left-20 text-5xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9s ease-in-out infinite",
+            animationDelay: "0.5s",
+          }}
+        >
+          🔔
+        </div>
+
+        {/* Copos de nieve - distribución completa */}
+        <div
+          className="absolute top-20 left-80 text-lg md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9s ease-in-out infinite",
+            animationDelay: "1.2s",
+          }}
+        >
+          ❄️
+        </div>
+        <div
+          className="absolute top-20 right-80 text-4xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7s ease-in-out infinite",
+            animationDelay: "2s",
+          }}
+        >
+          ❄️
+        </div>
+        <div
+          className="absolute top-40 left-50 text-3xl md:text-5xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8s ease-in-out infinite",
+            animationDelay: "3s",
+          }}
+        >
+          ❄️
+        </div>
+        <div
+          className="absolute top-40 right-50 text-3xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7.2s ease-in-out infinite",
+            animationDelay: "1.5s",
+          }}
+        >
+          ❄️
+        </div>
+        <div
+          className="absolute top-100 left-20 text-2xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.8s ease-in-out infinite",
+            animationDelay: "2.8s",
+          }}
+        >
+          ❄️
+        </div>
+        <div
+          className="absolute top-100 right-20 text-xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9.2s ease-in-out infinite",
+            animationDelay: "0.3s",
+          }}
+        >
+          ❄️
+        </div>
+        <div
+          className="absolute bottom-0 left-50 text-3xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.3s ease-in-out infinite",
+            animationDelay: "1.9s",
+          }}
+        >
+          ❄️
+        </div>
+
+        {/* Árboles de Navidad - distribución completa */}
+        <div
+          className="absolute top-10 left-120 text-2xl md:text-5xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 10s ease-in-out infinite",
+          }}
+        >
+          🎄
+        </div>
+        <div
+          className="absolute top-10 right-120 text-5xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9.5s ease-in-out infinite",
+            animationDelay: "1.5s",
+          }}
+        >
+          🎄
+        </div>
+        <div
+          className="absolute top-60 left-80 text-4xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.5s ease-in-out infinite",
+            animationDelay: "2.2s",
+          }}
+        >
+          🎄
+        </div>
+        <div
+          className="absolute top-80 right-70 text-xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9.8s ease-in-out infinite",
+            animationDelay: "0.7s",
+          }}
+        >
+          🎄
+        </div>
+        <div
+          className="absolute bottom-80 left-100 text-3xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.3s ease-in-out infinite",
+            animationDelay: "1.9s",
+          }}
+        >
+          🎄
+        </div>
+        <div
+          className="absolute bottom-10 right-100 text-4xl md:text-5xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 10.2s ease-in-out infinite",
+            animationDelay: "2.5s",
+          }}
+        >
+          🎄
+        </div>
+        <div
+          className="absolute bottom-20 left-60 text-3xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9.3s ease-in-out infinite",
+            animationDelay: "0.4s",
+          }}
+        >
+          🎄
+        </div>
+
+        {/* Regalos - distribución completa */}
+        <div
+          className="absolute top-30 left-150 text-4xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7s ease-in-out infinite",
+            animationDelay: "0.5s",
+          }}
+        >
+          🎁
+        </div>
+        <div
+          className="absolute top-30 right-150 text-xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8s ease-in-out infinite",
+            animationDelay: "1.8s",
+          }}
+        >
+          🎁
+        </div>
+        <div
+          className="absolute top-60 right-120 text-3xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 6.5s ease-in-out infinite",
+            animationDelay: "2.8s",
+          }}
+        >
+          🎁
+        </div>
+        <div
+          className="absolute top-60 left-120 text-3xl md:text-5xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7.5s ease-in-out infinite",
+            animationDelay: "1.2s",
+          }}
+        >
+          🎁
+        </div>
+        <div
+          className="absolute bottom-40 left-80 text-2xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.5s ease-in-out infinite",
+            animationDelay: "0.9s",
+          }}
+        >
+          🎁
+        </div>
+        <div
+          className="absolute bottom-40 right-80 text-5xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 7.8s ease-in-out infinite",
+            animationDelay: "2.3s",
+          }}
+        >
+          🎁
+        </div>
+        <div
+          className="absolute bottom-0 left-100 text-3xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.7s ease-in-out infinite",
+            animationDelay: "1.1s",
+          }}
+        >
+          🎁
+        </div>
+
+        <div
+          className="absolute top-80 right-150 text-4xl md:text-3xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 9s ease-in-out infinite",
+            animationDelay: "0.3s",
+          }}
+        >
+          🎅
+        </div>
+        <div
+          className="absolute bottom-30 left-140 text-3xl md:text-5xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 6.8s ease-in-out infinite",
+            animationDelay: "1.7s",
+          }}
+        >
+          🧦
+        </div>
+        <div
+          className="absolute bottom-40 right-180 text-2xl md:text-4xl"
+          style={{
+            opacity: emojiOpacity,
+            filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+            animation: "float 8.2s ease-in-out infinite",
+            animationDelay: "1.4s",
+          }}
+        >
+          🎅
+        </div>
       </div>
 
       {/* Contenido principal */}
@@ -550,7 +980,7 @@ export default function LotteryDisplayPage() {
                   <img
                     src={gorroNavideno}
                     alt="Gorrito navideño"
-                    className="absolute right-[-30px] rotate-[20deg] w-20 md:w-32 z-20 top-[-40px]"
+                    className="absolute  right-[-45px] md:right-[-55px] rotate-[35deg] w-28 md:w-38 z-20 top-[-50px] md:top-[-60px]"
                     style={{
                       animation: "fade-in 0.5s ease-in-out",
                       filter: "drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))",
