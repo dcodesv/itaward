@@ -24,7 +24,71 @@ export default function LotteryDisplayPage() {
   const [usedIndices, setUsedIndices] = useState<Set<number>>(new Set());
   const [showMystery, setShowMystery] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [shownCollaborators, setShownCollaborators] = useState<
+    CollaboratorWithLottery[]
+  >([]);
+  const [hasFinished, setHasFinished] = useState(false);
   const emojiOpacity = 0.2;
+
+  const STORAGE_KEY = "lottery_shown_collaborators";
+
+  // Funciones para sessionStorage
+  const saveToSessionStorage = useCallback(
+    (collaborator: CollaboratorWithLottery) => {
+      try {
+        const stored = sessionStorage.getItem(STORAGE_KEY);
+        const existing: CollaboratorWithLottery[] = stored
+          ? JSON.parse(stored)
+          : [];
+
+        // Verificar si ya existe para evitar duplicados
+        const exists = existing.some((c) => c.id === collaborator.id);
+        if (!exists) {
+          const updated = [...existing, collaborator];
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          setShownCollaborators(updated);
+        }
+      } catch (error) {
+        console.error("Error al guardar en sessionStorage:", error);
+      }
+    },
+    []
+  );
+
+  const loadFromSessionStorage = useCallback(() => {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed: CollaboratorWithLottery[] = JSON.parse(stored);
+        setShownCollaborators(parsed);
+      }
+    } catch (error) {
+      console.error("Error al cargar de sessionStorage:", error);
+    }
+  }, []);
+
+  const clearSessionStorage = useCallback(() => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+      setShownCollaborators([]);
+    } catch (error) {
+      console.error("Error al limpiar sessionStorage:", error);
+    }
+  }, []);
+
+  const handleReset = useCallback(() => {
+    // Limpiar sessionStorage
+    clearSessionStorage();
+    // Resetear todos los estados
+    setCurrentCollaborator(null);
+    setUsedIndices(new Set());
+    setShowMystery(false);
+    setHasStarted(false);
+    setHasFinished(false);
+    setIsAnimating(false);
+  }, [clearSessionStorage]);
 
   // Cargar colaboradores con datos de lotería
   useEffect(() => {
@@ -73,15 +137,11 @@ export default function LotteryDisplayPage() {
     };
 
     loadCollaborators();
-  }, []);
+    loadFromSessionStorage();
+  }, [loadFromSessionStorage]);
 
   const getRandomCollaborator = useCallback(() => {
     if (collaborators.length === 0) return null;
-
-    // Si ya se usaron todos, reiniciar
-    if (usedIndices.size >= collaborators.length) {
-      setUsedIndices(new Set());
-    }
 
     // Obtener índices disponibles
     const availableIndices = collaborators
@@ -89,24 +149,28 @@ export default function LotteryDisplayPage() {
       .filter((index) => !usedIndices.has(index));
 
     if (availableIndices.length === 0) {
-      // Si no hay disponibles, reiniciar y tomar uno al azar
-      const randomIndex = Math.floor(Math.random() * collaborators.length);
-      setUsedIndices(new Set([randomIndex]));
-      return collaborators[randomIndex];
+      // Si no hay disponibles, retornar null para indicar que se terminaron
+      return null;
     }
 
     // Seleccionar uno al azar de los disponibles
     const randomIndex =
       availableIndices[Math.floor(Math.random() * availableIndices.length)];
-    setUsedIndices((prev) => new Set([...prev, randomIndex]));
+    const newUsedIndices = new Set([...usedIndices, randomIndex]);
+    setUsedIndices(newUsedIndices);
+
     return collaborators[randomIndex];
   }, [collaborators, usedIndices]);
 
   const handleReveal = useCallback(() => {
     if (showMystery) {
       setShowMystery(false);
+      // Guardar en sessionStorage cuando se revela
+      if (currentCollaborator) {
+        saveToSessionStorage(currentCollaborator);
+      }
     }
-  }, [showMystery]);
+  }, [showMystery, currentCollaborator, saveToSessionStorage]);
 
   const handleNext = useCallback(() => {
     if (isAnimating || collaborators.length === 0) return;
@@ -128,6 +192,12 @@ export default function LotteryDisplayPage() {
       return;
     }
 
+    // Si ya se terminaron todos, mostrar pantalla de fin
+    if (usedIndices.size >= collaborators.length) {
+      setHasFinished(true);
+      return;
+    }
+
     setIsAnimating(true);
     setShowMystery(true);
 
@@ -136,12 +206,15 @@ export default function LotteryDisplayPage() {
       const next = getRandomCollaborator();
       if (next) {
         setCurrentCollaborator(next);
-      }
-
-      // Mostrar modo misterio
-      setTimeout(() => {
+        // Mostrar modo misterio
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 100);
+      } else {
+        // No hay más colaboradores, mostrar pantalla de fin
         setIsAnimating(false);
-      }, 100);
+        setHasFinished(true);
+      }
     }, 300);
   }, [
     isAnimating,
@@ -150,6 +223,7 @@ export default function LotteryDisplayPage() {
     showMystery,
     handleReveal,
     hasStarted,
+    usedIndices.size,
   ]);
 
   // Navegación con teclado
@@ -210,6 +284,312 @@ export default function LotteryDisplayPage() {
             No hay colaboradores con nombres de lotería configurados
           </p>
         </div>
+      </div>
+    );
+  }
+
+  // Pantalla de fin cuando se terminaron todos los colaboradores
+  if (hasFinished && !isLoading && collaborators.length > 0) {
+    return (
+      <div
+        className="h-screen w-screen relative overflow-hidden flex items-center justify-center"
+        style={{
+          background: "#5a1d1d",
+          backgroundImage:
+            "radial-gradient(ellipse at center, rgba(127, 46, 42, 0.85) 0%, rgba(90, 29, 28, 1) 100%)",
+        }}
+      >
+        {/* Efecto de viñeta sutil */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            boxShadow: "inset 0 0 200px rgba(0, 0, 0, 0.3)",
+          }}
+        />
+
+        <Snowfall />
+
+        {/* Decoraciones navideñas de fondo */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Emojis navideños distribuidos */}
+          <div
+            className="absolute top-8 left-12 text-4xl md:text-6xl"
+            style={{
+              opacity: emojiOpacity,
+              filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+              animation: "float 5s ease-in-out infinite",
+            }}
+          >
+            ⭐
+          </div>
+          <div
+            className="absolute top-20 right-16 text-3xl md:text-5xl"
+            style={{
+              opacity: emojiOpacity,
+              filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+              animation: "float 6s ease-in-out infinite",
+              animationDelay: "0.5s",
+            }}
+          >
+            🔔
+          </div>
+          <div
+            className="absolute bottom-24 left-20 text-5xl md:text-7xl"
+            style={{
+              opacity: emojiOpacity,
+              filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+              animation: "float 7s ease-in-out infinite",
+              animationDelay: "1s",
+            }}
+          >
+            🎄
+          </div>
+          <div
+            className="absolute bottom-32 right-24 text-4xl md:text-6xl"
+            style={{
+              opacity: emojiOpacity,
+              filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))",
+              animation: "float 5.5s ease-in-out infinite",
+              animationDelay: "1.5s",
+            }}
+          >
+            ❄️
+          </div>
+        </div>
+
+        {/* Contenido de fin */}
+        <div className="relative z-10 text-center px-8 max-w-2xl">
+          <div
+            className="text-5xl md:text-7xl font-normal mb-6"
+            style={{
+              fontFamily:
+                "'Cormorant Garamond', 'Playfair Display', 'Georgia', serif",
+              color: "#D4AF37",
+              fontWeight: 400,
+              animation: "fade-in 0.8s ease-in-out",
+            }}
+          >
+            ¡Finalizaron!
+          </div>
+          <p
+            className="text-white/80 text-lg md:text-xl mb-8 tracking-wide"
+            style={{
+              fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+              animation: "fade-in 1s ease-in-out",
+            }}
+          >
+            Todas las personas han sido mostradas
+          </p>
+          <button
+            onClick={handleReset}
+            className="px-8 py-3 text-white/90 text-sm uppercase tracking-[0.15em] transition-all hover:text-[#D4AF37] flex items-center gap-3 mx-auto"
+            style={{
+              fontFamily: "'Source Sans Pro', sans-serif",
+              fontWeight: 300,
+              borderBottom: "1px solid rgba(212, 175, 55, 0.4)",
+              borderRadius: 0,
+              background: "transparent",
+              animation: "fade-in 1.2s ease-in-out",
+            }}
+          >
+            <Icon icon="mdi:refresh" width={20} height={20} />
+            <span>Reiniciar Lotería</span>
+          </button>
+        </div>
+
+        {/* Botón de historial en esquina inferior derecha */}
+        <button
+          onClick={() => {
+            loadFromSessionStorage();
+            setShowHistoryModal(true);
+          }}
+          className="absolute bottom-8 right-8 z-20 p-3 rounded-full bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 transition-all backdrop-blur-sm border border-[#D4AF37]/40"
+          style={{
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+          }}
+          title="Ver historial de personas que ya salieron"
+        >
+          <Icon
+            icon="mdi:history"
+            width={24}
+            height={24}
+            className="text-[#D4AF37]"
+          />
+        </button>
+
+        {/* Modal de historial */}
+        {showHistoryModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{
+              background: "rgba(0, 0, 0, 0.7)",
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowHistoryModal(false);
+              }
+            }}
+          >
+            <div
+              className="relative w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col"
+              style={{
+                background: "#5a1d1d",
+                backgroundImage:
+                  "radial-gradient(ellipse at center, rgba(127, 46, 42, 0.9) 0%, rgba(90, 29, 28, 1) 100%)",
+                borderRadius: "8px",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header del modal */}
+              <div className="flex items-center justify-between p-6 border-b border-[#D4AF37]/30">
+                <h2
+                  className="text-2xl md:text-3xl font-normal"
+                  style={{
+                    fontFamily:
+                      "'Cormorant Garamond', 'Playfair Display', 'Georgia', serif",
+                    color: "#D4AF37",
+                    fontWeight: 400,
+                  }}
+                >
+                  Personas que ya salieron
+                </h2>
+                <button
+                  onClick={() => setShowHistoryModal(false)}
+                  className="p-2 hover:bg-[#D4AF37]/20 rounded-full transition-all"
+                >
+                  <Icon
+                    icon="mdi:close"
+                    width={24}
+                    height={24}
+                    className="text-white/80 hover:text-[#D4AF37]"
+                  />
+                </button>
+              </div>
+
+              {/* Buscador */}
+              <div className="p-6 border-b border-[#D4AF37]/20">
+                <div className="relative">
+                  <Icon
+                    icon="mdi:magnify"
+                    width={20}
+                    height={20}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre o nombre de lotería..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-[#D4AF37]/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#D4AF37] focus:bg-white/15 transition-all"
+                    style={{
+                      fontFamily: "'Source Sans Pro', sans-serif",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Listado de colaboradores */}
+              <div className="flex-1 overflow-y-auto p-6">
+                {shownCollaborators.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p
+                      className="text-white/60 text-lg"
+                      style={{
+                        fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+                      }}
+                    >
+                      Aún no ha salido ninguna persona
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {shownCollaborators
+                      .filter((collab) => {
+                        if (!searchTerm) return true;
+                        const search = searchTerm.toLowerCase();
+                        return (
+                          collab.fullName.toLowerCase().includes(search) ||
+                          collab.lotteryName?.toLowerCase().includes(search) ||
+                          collab.role?.toLowerCase().includes(search)
+                        );
+                      })
+                      .map((collab) => (
+                        <div
+                          key={collab.id}
+                          className="flex items-center gap-4 p-4 bg-white/5 rounded-lg border border-[#D4AF37]/20 hover:bg-white/10 transition-all"
+                        >
+                          <img
+                            src={collab.avatarUrl}
+                            alt={collab.fullName}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-[#D4AF37]/50"
+                            onError={(e) => {
+                              e.currentTarget.src =
+                                "https://via.placeholder.com/300?text=No+Image";
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="text-white/90 font-semibold truncate"
+                              style={{
+                                fontFamily: "'Source Sans Pro', sans-serif",
+                              }}
+                            >
+                              {collab.fullName}
+                            </p>
+                            <p
+                              className="text-[#D4AF37] text-sm truncate"
+                              style={{
+                                fontFamily:
+                                  "'Cormorant Garamond', 'Georgia', serif",
+                              }}
+                            >
+                              {collab.lotteryName}
+                            </p>
+                            {collab.role && (
+                              <p
+                                className="text-white/50 text-xs truncate"
+                                style={{
+                                  fontFamily: "'Source Sans Pro', sans-serif",
+                                }}
+                              >
+                                {collab.role}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer con contador */}
+              <div className="p-4 border-t border-[#D4AF37]/20 text-center">
+                <p
+                  className="text-white/60 text-sm"
+                  style={{
+                    fontFamily: "'Source Sans Pro', sans-serif",
+                  }}
+                >
+                  Total: {shownCollaborators.length} persona
+                  {shownCollaborators.length !== 1 ? "s" : ""}
+                  {searchTerm &&
+                    ` • Mostrando: ${
+                      shownCollaborators.filter((collab) => {
+                        const search = searchTerm.toLowerCase();
+                        return (
+                          collab.fullName.toLowerCase().includes(search) ||
+                          collab.lotteryName?.toLowerCase().includes(search) ||
+                          collab.role?.toLowerCase().includes(search)
+                        );
+                      }).length
+                    }`}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1106,6 +1486,200 @@ export default function LotteryDisplayPage() {
           {collaborators.length}
         </p>
       </div>
+
+      {/* Botón de historial en esquina inferior derecha */}
+      <button
+        onClick={() => {
+          loadFromSessionStorage();
+          setShowHistoryModal(true);
+        }}
+        className="absolute bottom-8 right-8 z-20 p-3 rounded-full bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 transition-all backdrop-blur-sm border border-[#D4AF37]/40"
+        style={{
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+        }}
+        title="Ver historial de personas que ya salieron"
+      >
+        <Icon
+          icon="mdi:history"
+          width={24}
+          height={24}
+          className="text-[#D4AF37]"
+        />
+      </button>
+
+      {/* Modal de historial */}
+      {showHistoryModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{
+            background: "rgba(0, 0, 0, 0.7)",
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowHistoryModal(false);
+            }
+          }}
+        >
+          <div
+            className="relative w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col"
+            style={{
+              background: "#5a1d1d",
+              backgroundImage:
+                "radial-gradient(ellipse at center, rgba(127, 46, 42, 0.9) 0%, rgba(90, 29, 28, 1) 100%)",
+              borderRadius: "8px",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del modal */}
+            <div className="flex items-center justify-between p-6 border-b border-[#D4AF37]/30">
+              <h2
+                className="text-2xl md:text-3xl font-normal"
+                style={{
+                  fontFamily:
+                    "'Cormorant Garamond', 'Playfair Display', 'Georgia', serif",
+                  color: "#D4AF37",
+                  fontWeight: 400,
+                }}
+              >
+                Personas que ya salieron
+              </h2>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="p-2 hover:bg-[#D4AF37]/20 rounded-full transition-all"
+              >
+                <Icon
+                  icon="mdi:close"
+                  width={24}
+                  height={24}
+                  className="text-white/80 hover:text-[#D4AF37]"
+                />
+              </button>
+            </div>
+
+            {/* Buscador */}
+            <div className="p-6 border-b border-[#D4AF37]/20">
+              <div className="relative">
+                <Icon
+                  icon="mdi:magnify"
+                  width={20}
+                  height={20}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50"
+                />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o nombre de lotería..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-[#D4AF37]/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#D4AF37] focus:bg-white/15 transition-all"
+                  style={{
+                    fontFamily: "'Source Sans Pro', sans-serif",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Listado de colaboradores */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {shownCollaborators.length === 0 ? (
+                <div className="text-center py-12">
+                  <p
+                    className="text-white/60 text-lg"
+                    style={{
+                      fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+                    }}
+                  >
+                    Aún no ha salido ninguna persona
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {shownCollaborators
+                    .filter((collab) => {
+                      if (!searchTerm) return true;
+                      const search = searchTerm.toLowerCase();
+                      return (
+                        collab.fullName.toLowerCase().includes(search) ||
+                        collab.lotteryName?.toLowerCase().includes(search) ||
+                        collab.role?.toLowerCase().includes(search)
+                      );
+                    })
+                    .map((collab) => (
+                      <div
+                        key={collab.id}
+                        className="flex items-center gap-4 p-4 bg-white/5 rounded-lg border border-[#D4AF37]/20 hover:bg-white/10 transition-all"
+                      >
+                        <img
+                          src={collab.avatarUrl}
+                          alt={collab.fullName}
+                          className="w-16 h-16 rounded-full object-cover border-2 border-[#D4AF37]/50"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://via.placeholder.com/300?text=No+Image";
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="text-white/90 font-semibold truncate"
+                            style={{
+                              fontFamily: "'Source Sans Pro', sans-serif",
+                            }}
+                          >
+                            {collab.fullName}
+                          </p>
+                          <p
+                            className="text-[#D4AF37] text-sm truncate"
+                            style={{
+                              fontFamily:
+                                "'Cormorant Garamond', 'Georgia', serif",
+                            }}
+                          >
+                            {collab.lotteryName}
+                          </p>
+                          {collab.role && (
+                            <p
+                              className="text-white/50 text-xs truncate"
+                              style={{
+                                fontFamily: "'Source Sans Pro', sans-serif",
+                              }}
+                            >
+                              {collab.role}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer con contador */}
+            <div className="p-4 border-t border-[#D4AF37]/20 text-center">
+              <p
+                className="text-white/60 text-sm"
+                style={{
+                  fontFamily: "'Source Sans Pro', sans-serif",
+                }}
+              >
+                Total: {shownCollaborators.length} persona
+                {shownCollaborators.length !== 1 ? "s" : ""}
+                {searchTerm &&
+                  ` • Mostrando: ${
+                    shownCollaborators.filter((collab) => {
+                      const search = searchTerm.toLowerCase();
+                      return (
+                        collab.fullName.toLowerCase().includes(search) ||
+                        collab.lotteryName?.toLowerCase().includes(search) ||
+                        collab.role?.toLowerCase().includes(search)
+                      );
+                    }).length
+                  }`}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Estilos de animación personalizados */}
       <style
